@@ -58,7 +58,9 @@ export async function readAllUsage(sources: Record<string, UsageSource>): Promis
   const perProvider = await Promise.all(
     Object.entries(sources).map(async ([provider, source]): Promise<AccountUsage[]> => {
       try {
-        return (await source.read()).map((reading) => ({ ...reading, provider, usagePage: source.usagePage }))
+        // Left out, not undefined, when the source has none: the report travels as JSON.
+        const page = source.usagePage === undefined ? {} : { usagePage: source.usagePage }
+        return (await source.read()).map((reading) => ({ ...reading, provider, ...page }))
       } catch (error) {
         const detail = error instanceof Error ? error.message : String(error)
         return [{ provider, status: 'unavailable', account: null, reason: 'unexpected-response', detail }]

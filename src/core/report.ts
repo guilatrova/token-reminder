@@ -53,7 +53,9 @@ export type Advice = {
 type OkUsage = Extract<AccountUsage, { status: 'ok' }>
 type UnavailableUsage = Extract<AccountUsage, { status: 'unavailable' }>
 
-export type OkAccountReport = Pick<OkUsage, 'provider' | 'account' | 'status' | 'plan' | 'usagePage'> & {
+export type OkAccountReport = Pick<OkUsage, 'provider' | 'account' | 'status' | 'plan'> & {
+  /** The provider's own usage page; null when it has none. */
+  usagePage: string | null
   key: string
   /** Longest window first: the first one is the plan period and drives the account's summary. */
   windows: WindowReport[]
@@ -133,7 +135,7 @@ function reportAccount(usage: AccountUsage, allRules: AlertRules, now: number): 
     account,
     status,
     plan,
-    usagePage,
+    usagePage: usagePage ?? null,
     windows,
     resets,
     advice: advise(main, resets.length, now),

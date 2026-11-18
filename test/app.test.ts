@@ -52,6 +52,8 @@ test('answers the panel, posts the report and puts the most pressing window in t
     workerWith({ Alpha: memoryUsage([reading(90, 150, 2)]), Beta: memoryUsage([reading(80, 12)]) }),
   )
   const report = await worker.request('usage.read')
+  // Orca refuses an answer that is not plain JSON, such as one with an undefined field.
+  assert.deepEqual(JSON.parse(JSON.stringify(report)), report)
   assert.deepEqual(worker.posts.at(-1), { event: 'usage.changed', payload: report })
   const shown = lastStatusBar(worker) as { text: string; tone: string; tooltip: string }
   assert.deepEqual([shown.text, shown.tone], ['Beta 80% left · 12h', 'danger'])
