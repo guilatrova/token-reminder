@@ -25,15 +25,14 @@ function orcaDataDir(): string {
   return join(process.env.XDG_CONFIG_HOME ?? join(homedir(), '.config'), 'orca')
 }
 
-/** Accounts Orca manages first, then the Codex CLI's own login. */
+/** The Codex accounts Orca manages. The Codex CLI's own login is left out on purpose. */
 async function codexHomes(): Promise<string[]> {
   const accountsDir = join(orcaDataDir(), 'codex-accounts')
   const accountIds = await readdir(accountsDir).catch((error: unknown) => {
     if (isMissing(error)) return []
     throw error
   })
-  const managed = accountIds.map((id) => join(accountsDir, id, 'home'))
-  return [...managed, process.env.CODEX_HOME ?? join(homedir(), '.codex')]
+  return accountIds.map((id) => join(accountsDir, id, 'home'))
 }
 
 let stop: (() => void) | undefined

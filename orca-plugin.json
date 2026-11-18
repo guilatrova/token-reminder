@@ -3,7 +3,7 @@
   "id": "token-reminder",
   "name": "Token Reminder",
   "version": "0.1.0",
-  "description": "Shows how much of each AI plan is still unused and warns before a reset throws it away.",
+  "description": "Shows in the status bar how much of each AI plan is still unused and warns before a reset throws it away.",
   "engines": {
     "orca": ">=1.4.248"
   },
@@ -11,20 +11,19 @@
   "pluginApi": 1,
   "main": "src/worker.ts",
   "contributes": {
-    "panels": [
+    "commands": [
       {
-        "id": "usage",
-        "title": "Token Reminder",
-        "icon": "bell",
-        "entry": "src/panel.tsx",
-        "ui": "components"
+        "id": "token-reminder.refresh",
+        "title": "Token Reminder: Refresh usage"
       }
     ],
     "statusBarItems": [
       {
-        "id": "worst-alert",
+        "id": "unused-plan",
         "icon": "bell",
-        "tooltip": "Token Reminder"
+        "text": "Reading usage",
+        "tooltip": "Token Reminder",
+        "command": "token-reminder.refresh"
       }
     ]
   },

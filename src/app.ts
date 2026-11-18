@@ -1,44 +1,33 @@
-// What the worker does, given its usage sources: answer the panel, re-read on a timer and keep
-// the status bar item on the most pressing alert. It never names a provider.
+// What the worker does, given its usage sources: keep the status bar item on the most pressing
+// window, re-reading on a timer and when the item is pressed. It never names a provider.
 import type { OrcaWorkerApi } from 'orca/worker'
-import { DEFAULT_ALERT_RULES, formatDuration } from './core/alerts'
-import { buildReport, headline, type UsageReport } from './core/report'
+import { DEFAULT_ALERT_RULES } from './core/alerts'
+import { buildReport } from './core/report'
 import { readAllUsage, type UsageSource } from './core/usage'
-import { LEVEL_LABEL, LEVEL_TONE } from './tones'
-import './protocol'
+import { statusBarView } from './status-bar'
 
-const STATUS_BAR_ITEM = 'worst-alert'
+const STATUS_BAR_ITEM = 'unused-plan'
+const REFRESH_COMMAND = 'token-reminder.refresh'
 const POLL_MS = 10 * 60 * 1000
-
-async function showHeadline(orca: OrcaWorkerApi, report: UsageReport): Promise<void> {
-  const top = headline(report)
-  if (!top) {
-    await orca.host.call('statusBar.update', { id: STATUS_BAR_ITEM, visible: false })
-    return
-  }
-  await orca.host.call('statusBar.update', {
-    id: STATUS_BAR_ITEM,
-    visible: true,
-    text: `${top.provider} ${Math.round(top.leftPercent)}% left`,
-    tone: LEVEL_TONE[top.level],
-    tooltip: `${LEVEL_LABEL[top.level]}: resets in ${formatDuration(top.resetsAt - report.readAt)}`,
-  })
-}
 
 /** Starts the worker's behavior and returns the function that stops it. */
 export function start(orca: OrcaWorkerApi, sources: Record<string, UsageSource>): () => void {
-  async function refresh(): Promise<UsageReport> {
-    const report = buildReport(await readAllUsage(sources), DEFAULT_ALERT_RULES, Date.now())
-    orca.panels.post('usage.changed', report)
-    await showHeadline(orca, report)
-    return report
+  /** Reads every source, updates the item and answers its tooltip text. */
+  async function refresh(): Promise<string> {
+    const view = statusBarView(buildReport(await readAllUsage(sources), DEFAULT_ALERT_RULES, Date.now()))
+    await orca.host.call('statusBar.update', { id: STATUS_BAR_ITEM, visible: true, ...view })
+    return view.tooltip
   }
   const refreshInBackground = (): void => {
     refresh().catch((error: unknown) => orca.log(`Usage refresh failed: ${String(error)}`))
   }
 
-  orca.panels.handle('usage.read', refresh)
+  // Pressing the item runs this; Orca shows the returned text.
+  const command = orca.commands.register(REFRESH_COMMAND, refresh)
   const timer = setInterval(refreshInBackground, POLL_MS)
   refreshInBackground()
-  return () => clearInterval(timer)
+  return () => {
+    clearInterval(timer)
+    command.dispose()
+  }
 }

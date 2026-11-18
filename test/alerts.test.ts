@@ -54,5 +54,5 @@ test('the report puts the most pressing account first and headlines it', () => {
     ['Now', 'Soon', 'Calm', 'Down'],
   )
   assert.deepEqual(headline(report), { provider: 'Now', leftPercent: 80, level: 'urgent', resetsAt: NOW + 12 * HOUR })
-  assert.equal(headline(buildReport([account('Calm', weekly(90, 150))], DEFAULT_ALERT_RULES, NOW)), null)
+  assert.equal(headline(buildReport([down], DEFAULT_ALERT_RULES, NOW)), null)
 })

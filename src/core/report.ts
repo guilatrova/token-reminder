@@ -35,16 +35,16 @@ export function buildReport(accounts: AccountUsage[], rules: AlertRule[], now: n
   return { accounts: reported.sort((a, b) => sortRank(a) - sortRank(b)), rules, readAt: now }
 }
 
-export type Headline = { provider: string; leftPercent: number; level: Exclude<AlertLevel, 'ok'>; resetsAt: number }
+export type Headline = { provider: string; leftPercent: number; level: AlertLevel; resetsAt: number }
 
-/** The single most pressing window, for a one-line summary; null when nothing is alerting. */
+/** The most pressing judged window: worst alert first, then the soonest reset. Null when none is judged. */
 export function headline(report: UsageReport): Headline | null {
   let best: Headline | null = null
   for (const account of report.accounts) {
     if (account.status !== 'ok') continue
     for (const window of account.windows) {
-      const level = window.alert?.level
-      if (!level || level === 'ok' || window.resetsAt === null) continue
+      if (!window.alert || window.resetsAt === null) continue
+      const { level } = window.alert
       const candidate = {
         provider: account.provider,
         leftPercent: leftPercent(window),
