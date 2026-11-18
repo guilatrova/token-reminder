@@ -1071,6 +1071,9 @@ select {
 .tibo-help summary::-webkit-details-marker {
   display: none;
 }
+.tibo-help summary .icon:last-child {
+  transition: transform 0.18s;
+}
 .tibo-help[open] summary .icon:last-child {
   transform: rotate(90deg);
 }
