@@ -73,3 +73,5 @@ Unprompted, on the panel running in Orca:
   marks the time gone, and the hatch between them is what should have been spent by now.
 - "Essa barra pode ser mais slim, e no hover exibe o % e ela fica gorda." The bar is `4px` at rest; hovering
   thickens it to `14px` and shows the share used. The used/left caption under the bar is gone.
+- "Tem como no footer ter um link pro meu github, mas bem pequenininho... tipo créditos: Who created this?" A tiny
+  credit link under the list.

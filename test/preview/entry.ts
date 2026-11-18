@@ -9,6 +9,7 @@ Object.assign(window, {
     locale: 'en-US',
     plugin: { request: fakeWorker(params.get('scenario') ?? 'today'), on: nothing },
     on: nothing,
+    shell: { openExternal: async (url: string) => (console.log('openExternal', url), { opened: true }) },
   },
 })
 await import('../../src/panel/main')

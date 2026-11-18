@@ -119,6 +119,11 @@ Opens under the row with a `0.25s` height transition. In order:
 The first line of the panel: two `24px` icon buttons on the right, alert rules (gear) and refresh. The refresh icon
 spins while a read is running. There is no title and no "updated" text.
 
+## Credit
+
+Under the list, centred, one tiny link in faint text (`10px`): "Who created this?". It opens the author's GitHub page
+in the system browser. It is left out where Orca cannot open links.
+
 ## Alert rules
 
 The gear swaps the list for the rules; a back button ("‹ Alert rules") returns. Under it, one sentence: "Warn me when

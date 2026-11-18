@@ -4,6 +4,8 @@ import type { AlertRule } from '../core/alerts'
 import type { UsageReport } from '../core/report'
 import { panelView, type Actions, type PanelState } from './view'
 
+const AUTHOR_URL = 'https://github.com/guilatrova'
+
 const root = document.getElementById('root')
 if (!root) throw new Error('The panel page has no #root element.')
 
@@ -49,6 +51,8 @@ const actions: Actions = {
     render()
   },
   toggle: (key, open) => state.opened.set(key, open),
+  // Orca opens it in the system browser, asking the person first for a site this plugin has not opened before.
+  openCredit: orca.shell ? () => void orca.shell?.openExternal(AUTHOR_URL) : null,
 }
 
 orca.plugin.on('usage.changed', (report) => {

@@ -21,6 +21,8 @@ export type Actions = {
   refresh: () => void
   showRules: () => void
   showAccounts: () => void
+  /** Opens the author's page in the browser; null where Orca cannot open links (browser clients). */
+  openCredit: (() => void) | null
   saveRules: (rules: AlertRule[]) => void
   toggle: (key: string, open: boolean) => void
 }
@@ -36,6 +38,15 @@ function toolbar(state: PanelState, actions: Actions): HTMLElement {
     el('span', 'toolbar-error', state.error ?? ''),
     el('span', 'tools', iconButton('Alert rules', 'gear', 'gear', actions.showRules), refresh),
   )
+}
+
+function credit(actions: Actions): HTMLElement | string {
+  if (!actions.openCredit) return ''
+  const link = el('button', 'credit', 'Who created this?')
+  link.type = 'button'
+  link.dataset.focus = 'credit'
+  link.addEventListener('click', actions.openCredit)
+  return link
 }
 
 function accountsView(state: PanelState, report: UsageReport, actions: Actions, locale: string): HTMLElement {
@@ -55,7 +66,7 @@ function accountsView(state: PanelState, report: UsageReport, actions: Actions, 
           el('p', 'muted', 'Add an account in Orca and it shows up here.'),
         )
       : el('div', 'accounts', ...report.accounts.map((account) => accountRow(account, ctx)))
-  return el('div', 'panel', toolbar(state, actions), list)
+  return el('div', 'panel', toolbar(state, actions), list, credit(actions))
 }
 
 /** Placeholder rows in the shape of the account list, so the panel does not jump when the report arrives. */
