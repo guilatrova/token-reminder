@@ -167,7 +167,7 @@ Each tab shows two groups, each under a `13px/600` title with its tooltip:
 - **Weekly reset**: "Warn me when a weekly reset is close and a lot is still unused. Each rule is a mark on the bar."
   Times from 6h to 7d, shares from 10% to 90%.
 - **Rate limit reset**: "Warn me when a rate limit reset is about to expire unused." Times from 1d to 30d, shares
-  from 0% to 90%. Built in: yellow at ≤ 10d and red at ≤ 5d, with any share left.
+  from 0% to 90%.
 
 An account's group replaces the general one for that account. Until it has one it reads "Follows the general rules."
 

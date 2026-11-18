@@ -90,7 +90,11 @@ function ruleRow(
   level.classList.add('level')
   const within = chip(
     KINDS[kind].withinLabel,
-    numberOptions(KINDS[kind].within, rule.withinMs, formatDuration),
+    numberOptions(
+      [...KINDS[kind].within, ...DEFAULT_ALERT_RULES.general[kind].map((entry) => entry.withinMs)],
+      rule.withinMs,
+      formatDuration,
+    ),
     String(rule.withinMs),
     `${focus}-within`,
     (value) => change({ withinMs: Number(value) }),

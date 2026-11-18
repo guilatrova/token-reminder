@@ -23,10 +23,10 @@ test('little left near the reset is on track: there is nothing to lose', () => {
   assert.equal(levelOf(weekly(20, 5)), 'ok')
 })
 
-test('half left two days out warns, and the worst matching rule wins', () => {
-  assert.equal(levelOf(weekly(50, 48)), 'warning')
+test('half left three days out warns, and the worst matching rule wins', () => {
+  assert.equal(levelOf(weekly(50, 72)), 'warning')
   assert.equal(levelOf(weekly(60, 20)), 'warning')
-  assert.equal(levelOf(weekly(74, 20)), 'urgent')
+  assert.equal(levelOf(weekly(70, 72)), 'urgent')
   assert.equal(levelOf(weekly(92, 9)), 'urgent')
 })
 
@@ -83,7 +83,7 @@ test('a reset is judged by the reset rules, colours the account and is what it c
   assert.equal(Math.round(account.windows[0]?.atRiskPercent ?? -1), 2)
   assert.deepEqual(
     account.resets.map((reset) => reset.alert?.level),
-    ['urgent', 'ok', undefined],
+    ['urgent', 'warning', undefined],
   )
   assert.equal(account.level, 'urgent')
   assert.deepEqual(spendCalls(report), [

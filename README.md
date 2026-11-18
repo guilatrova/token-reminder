@@ -13,9 +13,8 @@ and much of what you paid for is still there.
   Pressing it toggles the right sidebar, where the panel lives.
 - **Panel:** for each account, every plan window and every rate-limit reset you can still redeem, with the date it
   ends and the time left.
-- Turns yellow or red from your alert rules. Weekly resets (built in: reset within 2d with 50% left, 1d with 70%, 10h
-  with 90%) and rate-limit resets about to expire (built in: yellow within 10d, red within 5d) have rules of their
-  own. Weekly and monthly windows are judged; the short session window is not.
+- Weekly and monthly windows use the plan rules. Rate-limit resets use separate expiry rules. The built-in
+  thresholds live in [alert-defaults.ts](src/core/alert-defaults.ts).
 - Each plan rule is a dashed mark on the account's bar. A rule with no colour only marks a spend to aim for.
 - **Settings** (the gear): edit the rules for every account or for one account, and hide the status bar item.
 - Re-reads every 10 minutes while the status bar item shows. Opening the panel shows the last read at once and only

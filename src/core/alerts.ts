@@ -1,8 +1,8 @@
 // "Use it or lose it": an alert fires when a reset is close and much of the plan is still unused.
 import { leftPercent, type UsageWindow, type WindowKind } from './usage'
 
-const HOUR = 60 * 60 * 1000
-const DAY = 24 * HOUR
+import { DEFAULT_ALERT_RULES } from './alert-defaults'
+export { DEFAULT_ALERT_RULES } from './alert-defaults'
 
 export type AlertLevel = 'ok' | 'warning' | 'urgent'
 
@@ -26,22 +26,6 @@ export type AlertRules = {
   general: RuleSet
   /** By account key. A kind an account has replaces the general one for it; a kind it lacks follows general. */
   accounts: Record<string, Partial<RuleSet>>
-}
-
-export const DEFAULT_ALERT_RULES: AlertRules = {
-  general: {
-    plan: [
-      { withinMs: 2 * DAY, minLeftPercent: 50, level: 'warning' },
-      { withinMs: DAY, minLeftPercent: 70, level: 'urgent' },
-      { withinMs: 10 * HOUR, minLeftPercent: 90, level: 'urgent' },
-    ],
-    // A reset is worth a whole plan window, so it is worth spending however much of the plan is left.
-    reset: [
-      { withinMs: 10 * DAY, minLeftPercent: 0, level: 'warning' },
-      { withinMs: 5 * DAY, minLeftPercent: 0, level: 'urgent' },
-    ],
-  },
-  accounts: {},
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

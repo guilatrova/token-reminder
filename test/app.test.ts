@@ -50,7 +50,7 @@ const lastStatusBar = (worker: Awaited<ReturnType<typeof mountWorker>>) =>
 test('answers the panel, posts the report and puts what needs spending in the status bar', async () => {
   const worker = await mountWorker(
     workerWith({
-      Alpha: memoryUsage([reading(90, 150, 2)]),
+      Alpha: memoryUsage([reading(90, 150)]),
       Beta: memoryUsage([reading(80, 12)]),
       Gamma: memoryUsage([reading(60, 40)]),
     }),
