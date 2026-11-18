@@ -44,7 +44,7 @@ Orca has no status colours, so the panel defines three, once, keyed on the `dark
 | `warning` | Spend soon | `#fbbf24` | `#d97706` |
 | `urgent`  | Spend now  | `#f87171` | `#dc2626` |
 
-Critical indicators slowly alternate between red and orange. Reduced motion keeps them red.
+Critical indicators blend red and amber in a slowly moving gradient. Reduced motion keeps the gradient still.
 
 A level class (`lvl-ok`, `lvl-warning`, `lvl-urgent`) sets one `--c` custom property; everything coloured by state
 reads `--c`.

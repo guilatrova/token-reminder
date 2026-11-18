@@ -2,7 +2,7 @@
   --ok: #34d399;
   --warning: #fbbf24;
   --urgent: #f87171;
-  --critical-orange: #fb923c;
+  --critical-amber: #ffbd61;
   --faint: color-mix(in srgb, var(--orca-muted-foreground) 70%, transparent);
   --track: color-mix(in srgb, var(--orca-foreground) 12%, transparent);
 }
@@ -10,7 +10,7 @@
   --ok: #059669;
   --warning: #d97706;
   --urgent: #dc2626;
-  --critical-orange: #b45309;
+  --critical-amber: #a85a08;
 }
 .lvl-ok {
   --c: var(--ok);
@@ -24,18 +24,48 @@
 :where(.lvl-critical) {
   --c: var(--urgent);
 }
-@property --critical-ink {
-  syntax: '<color>';
+@property --flow {
+  syntax: '<percentage>';
   inherits: false;
-  initial-value: transparent;
+  initial-value: 20%;
 }
-@keyframes critical-pulse {
-  from {
-    --critical-ink: var(--urgent);
-  }
+.lvl-critical {
+  --surface:
+    radial-gradient(ellipse at 35% 12%, var(--critical-amber) 4%, transparent 44%),
+    radial-gradient(ellipse at 74% 85%, var(--critical-amber), transparent 42%),
+    linear-gradient(115deg, var(--urgent) 12%, var(--critical-amber) 48%, var(--urgent) 78%);
+}
+@keyframes amber-flow {
   to {
-    --critical-ink: var(--critical-orange);
+    --flow: 82%;
   }
+}
+.tank.lvl-critical,
+.line.lvl-critical > i,
+.acct.lvl-critical .pct,
+.rule.lvl-critical .chip.level,
+.rule-mark.lvl-critical::before {
+  background-image: var(--surface);
+  background-size: 155% 170%;
+  background-position: var(--flow) center;
+}
+.acct.lvl-critical .pct,
+.rule.lvl-critical .chip.level {
+  background-clip: text;
+  color: transparent;
+}
+.rule.lvl-critical .chip.level {
+  appearance: auto;
+  padding-right: 2px;
+}
+.rule.lvl-critical option {
+  color: var(--orca-foreground);
+  background: var(--orca-background);
+}
+.rule-mark.lvl-critical::before {
+  border: 0;
+  width: 2px;
+  mask-image: repeating-linear-gradient(to bottom, black 0 4px, transparent 4px 6px);
 }
 @media (prefers-reduced-motion: no-preference) {
   .rule.lvl-critical .level,
@@ -43,8 +73,7 @@
   .line.lvl-critical > i,
   .acct.lvl-critical .pct,
   .rule-mark.lvl-critical::before {
-    --c: var(--critical-ink);
-    animation: critical-pulse 2s ease-in-out infinite alternate;
+    animation: amber-flow 3.8s ease-in-out infinite alternate;
   }
 }
 /* A rule that only marks the bar. */
