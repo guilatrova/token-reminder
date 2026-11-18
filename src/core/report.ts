@@ -42,7 +42,7 @@ export type AccountReport = OkAccountReport | UnavailableUsage
 export type UsageReport = {
   accounts: AccountReport[]
   rules: AlertRule[]
-  /** Epoch ms when the providers were read. */
+  /** Epoch ms when this report was worked out. Every time left counts from here. */
   readAt: number
 }
 

@@ -3,7 +3,7 @@ import { formatDuration } from '../core/alerts'
 
 export type ViewContext = {
   locale: string
-  /** Epoch ms of the read: every "time left" counts from here, like the report does. */
+  /** The report's `readAt`: every "time left" counts from here, like the report does. */
   readAt: number
   /** Whether bars grow in. Only the first time a report is drawn. */
   animate: boolean
