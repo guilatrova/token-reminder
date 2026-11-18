@@ -1126,10 +1126,6 @@ select {
   color: #64c6ff;
   font-weight: 500;
 }
-.tibo-parody {
-  margin-left: auto;
-  align-self: flex-start;
-}
 .tibo-quip {
   margin: 13px 0 20px;
   font-size: clamp(16px, 4.4vw, 20px);

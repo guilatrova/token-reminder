@@ -59,7 +59,6 @@ export function tiboPost(weekly: ReturnType<typeof weeklyUsage>, total: number) 
     'tibo-author',
     portrait(),
     el('div', '', name, el('small', '', 'Replying to ', el('b', '', '@you'))),
-    el('small', 'tibo-parody', 'Parody'),
   )
   const text = milestone === null ? 'Anybody seen my tokens? Still waiting for weekly usage.' : quips[milestone]!
   const post = el('article', 'tibo-post', author, el('p', 'tibo-quip', text))
