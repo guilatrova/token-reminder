@@ -2,8 +2,10 @@
   "manifestVersion": 2,
   "id": "token-reminder",
   "name": "Token Reminder",
+  "publisher": "guilatrova",
+  "license": "MIT",
   "version": "0.1.0",
-  "description": "Shows how much of each AI plan is still unused and warns before a reset throws it away.",
+  "description": "Don't lose all your tokens nor resets! Get reminders before unused Claude, Codex, and Grok usage limits reset.",
   "engines": {
     "orca": ">=1.4.248"
   },
