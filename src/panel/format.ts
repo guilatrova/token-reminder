@@ -17,8 +17,3 @@ export const shortDate = (ms: number, locale: string) =>
   new Date(ms).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric' })
 
 export const timeLeft = (deadline: number, readAt: number) => formatDuration(deadline - readAt)
-
-export function updatedText(readAt: number, now: number): string {
-  const ago = now - readAt
-  return ago < 60_000 ? 'Updated just now' : `Updated ${formatDuration(ago)} ago`
-}

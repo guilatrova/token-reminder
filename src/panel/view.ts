@@ -3,7 +3,7 @@ import type { AlertRule } from '../core/alerts'
 import type { UsageReport } from '../core/report'
 import { accountRow } from './account-row'
 import { el, iconButton } from './dom'
-import { updatedText, type ViewContext } from './format'
+import type { ViewContext } from './format'
 import { rulesView } from './rules-view'
 
 export type PanelState = {
@@ -25,18 +25,15 @@ export type Actions = {
   toggle: (key: string, open: boolean) => void
 }
 
-function footer(state: PanelState, report: UsageReport, actions: Actions): HTMLElement {
+/** The first line: settings and refresh on the right, and why the last read failed, if it did, on the left. */
+function toolbar(state: PanelState, actions: Actions): HTMLElement {
   const refresh = iconButton('Refresh', 'refresh', 'refresh', actions.refresh)
   refresh.disabled = state.loading
   refresh.classList.toggle('spinning', state.loading)
-  const status =
-    state.error === null
-      ? el('span', 'updated', updatedText(report.readAt, Date.now()))
-      : el('span', 'footer-error', state.error)
   return el(
     'div',
-    'footer',
-    status,
+    'toolbar',
+    el('span', 'toolbar-error', state.error ?? ''),
     el('span', 'tools', iconButton('Alert rules', 'gear', 'gear', actions.showRules), refresh),
   )
 }
@@ -58,7 +55,7 @@ function accountsView(state: PanelState, report: UsageReport, actions: Actions, 
           el('p', 'muted', 'Add an account in Orca and it shows up here.'),
         )
       : el('div', 'accounts', ...report.accounts.map((account) => accountRow(account, ctx)))
-  return el('div', 'panel', list, footer(state, report, actions))
+  return el('div', 'panel', toolbar(state, actions), list)
 }
 
 /** Placeholder rows in the shape of the account list, so the panel does not jump when the report arrives. */

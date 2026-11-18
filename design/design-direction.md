@@ -5,8 +5,8 @@ Decided in [design-interview.md](design-interview.md). This file is the specific
 ## Principles
 
 - Clean like Orca's own Usage list, but alive: colour and a bar tell the state before any text is read.
-- Lean: one line per account. Detail opens on demand. No header, no cards, no nested surfaces; hairlines and spacing
-  group things.
+- Lean: one line per account. Detail opens on demand. No header, no cards, no nested surfaces and no divider
+  lines; spacing groups things.
 - The panel draws what `src/core/report.ts` works out. It computes nothing about usage, alerts or advice.
 
 ## Surfaces
@@ -53,7 +53,7 @@ reads `--c`.
 
 One `<button aria-expanded>` per account, a grid of seven cells:
 
-`avatar 22px | name and plan | bar (1fr, min 48px) | tanks | % left 38px | time 50px | chevron 12px`
+`avatar 22px | name and plan | bar (1fr, min 48px) | tanks | % left 60px | time 50px | chevron 12px`
 
 - **Avatar**: the provider's own mark at `14px`, the same ones Orca's usage meter shows, on the quiet fill with a
   hairline border. A provider without a mark shows its first two letters, `10px/700`.
@@ -61,7 +61,9 @@ One `<button aria-expanded>` per account, a grid of seven cells:
 - **Bar** (`6px` high in the row): only while the account is closed. See "The pace bar".
 - **Tanks**: one `9 x 12px` block per unused reset, coloured by that reset's own level; neutral (secondary text
   colour) when its level is `ok` or unknown.
-- **% left** in the account's level colour, `650` weight. **Time** to the main window's reset, secondary text.
+- **% left**: the number in the account's level colour, `650` weight, then "left" small in secondary text. **Time**
+  to the main window's reset, secondary text.
+- **Hover**: the row takes the hover fill, `8px` radius, bleeding `8px` into the panel's padding. No underline.
 - **Chevron** rotates 90 degrees when open.
 
 Accounts that need spending (level not `ok`) start open. A person's own open or close choice wins and is kept while
@@ -69,13 +71,14 @@ the panel stays open, across refreshes.
 
 ## The pace bar
 
-The bar is the plan, the tick is the clock:
+The bar is the window, read left to right as both the plan and the clock:
 
-- **Fill**: the share of the plan left, in the level colour, from the left edge.
-- **Tick**: a `2px` vertical line in the text colour at the share of the window's time left, with a `2px` halo in the
-  page colour, sticking `3px` out above and below.
-- **Hatch**: where the fill runs past the tick, a 45 degree stripe pattern in the page colour at 55% over the fill.
-  That stretch is the plan on course to go unused.
+- **Fill**: the share of the plan already used, in the level colour, from the left edge.
+- **Tick**: a `2px` vertical line in the text colour at the share of the window's time already gone, with a `2px` halo
+  in the page colour, sticking `3px` out above and below.
+- **Hatch**: where the tick is ahead of the fill, the stretch between them is striped at 45 degrees in the level
+  colour at 60%. That is the plan that should have been spent by now, and is on course to go unused.
+- The empty track to the right of both is what is left.
 - With an unknown reset time there is no tick and no hatch.
 - The fill grows from 0 in `0.7s`; the hatch fades in after it. No motion under `prefers-reduced-motion`.
 
@@ -84,7 +87,7 @@ The bar is the plan, the tick is the clock:
 Opens under the row with a `0.25s` height transition. In order:
 
 1. The account (email), faint, when known.
-2. The pace bar again, `10px` high.
+2. The pace bar again, `10px` high, with a caption beneath: "26% used" on the left, "74% left" on the right.
 3. A note, when the at-risk share rounds to 1% or more: "~62% about to go unused" in the level colour and `600` when
    the main window is alerting, otherwise "~14% may go unused" in secondary text.
 4. One line per deadline: a `6px` dot, a label, the date ("Tue, Nov 24"), and the time left in `600`. The dot and the
@@ -101,22 +104,22 @@ Opens under the row with a `0.25s` height transition. In order:
 - **Reading, first time**: three placeholder rows in the shape of an account row (avatar, name, bar, share, time),
   filled with the bar-track colour and a slow sweep of light; no sweep under `prefers-reduced-motion`.
 - **Read failed, nothing to show**: the error in the urgent colour and a "Try again" button.
-- **Read failed, report on screen**: the report stays; the footer shows the error in place of "Updated…".
+- **Read failed, report on screen**: the report stays; the toolbar shows the error on its left.
 - **No accounts**: "No accounts yet" and, in secondary text, "Add an account in Orca and it shows up here."
 - **Unavailable account**: the row shows the avatar, the name and "Unavailable" in the warning colour; it does not
   open. Its reason is always shown beneath, in secondary text.
 - **A plan with no window**: the row shows "–" for the share and the time and no bar; the detail says "This plan
   reports no usage window."
 
-## Footer
+## Toolbar
 
-A hairline, then "Updated 2m ago" in faint text on the left and two `24px` icon buttons on the right: alert rules
-(gear) and refresh. The refresh icon spins while a read is running.
+The first line of the panel: two `24px` icon buttons on the right, alert rules (gear) and refresh. The refresh icon
+spins while a read is running. There is no title and no "updated" text.
 
 ## Alert rules
 
 The gear swaps the list for the rules; a back button ("‹ Alert rules") returns. Under it, one sentence: "Warn me when
 a reset is close and a lot is still unused."
 
-One row per rule: a `4px` colour bar, then three labelled selects ("Reset within", "Unused at least", "Alert") and a
+One row per rule, with no divider lines: a `4px` colour bar, then three labelled selects ("Reset within", "Unused at least", "Alert") and a
 remove button. Below: "+ Add rule" and "Defaults". Every change is saved at once.

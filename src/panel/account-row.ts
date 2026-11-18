@@ -43,7 +43,7 @@ function okAccount(account: OkAccountReport, ctx: ViewContext): HTMLElement {
     el('span', 'who', el('span', 'name', account.provider), el('span', 'plan', account.plan ?? '')),
     main ? paceBar(main, false, ctx.animate) : el('span', ''),
     tanks(account, ctx),
-    main ? el('span', 'pct', percent(leftPercent(main))) : el('span', 'pct none', '–'),
+    main ? el('span', 'pct', percent(leftPercent(main)), el('small', '', ' left')) : el('span', 'pct none', '–'),
     el('span', 'time', main?.resetsAt != null ? timeLeft(main.resetsAt, ctx.readAt) : '–'),
     el('span', 'chev', icon('chevron')),
   )

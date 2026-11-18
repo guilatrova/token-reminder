@@ -2,7 +2,6 @@
 import '../protocol'
 import type { AlertRule } from '../core/alerts'
 import type { UsageReport } from '../core/report'
-import { updatedText } from './format'
 import { panelView, type Actions, type PanelState } from './view'
 
 const root = document.getElementById('root')
@@ -57,11 +56,5 @@ orca.plugin.on('usage.changed', (report) => {
   state.error = null
   render()
 })
-
-// "Updated 2m ago" moves on without a redraw, so an open row or a focused control is left alone.
-setInterval(() => {
-  const label = root.querySelector('.updated')
-  if (label && state.report) label.textContent = updatedText(state.report.readAt, Date.now())
-}, 60_000)
 
 await actions.refresh()

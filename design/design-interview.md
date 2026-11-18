@@ -58,3 +58,16 @@ Orca's icon list for the sidebar tab and the status bar has no token or coin, so
 whether `gauge` is the icon he wants.
 
 The rules chart from option C was never commented on, so it is not part of the direction.
+
+## Q4. After using the built panel
+
+Unprompted, on the panel running in Orca:
+
+- "O state de loading tem que ser mais bonito... adiciona um skeleton." Done: placeholder rows.
+- "Quero ícones reais das IAs, pega as mesmas do repo do orca." Done: the providers' own marks.
+- "O status bar vai pra primeira linha, com gear/refresh na direita", "remover o updated just now", "remover barra
+  divisória", "remover o underline no hover, melhor uma mudança da cor do bg." The footer became a toolbar on the
+  first line; no "updated" text; no divider lines anywhere; hover is a background fill.
+- The bar: "Tá confuso o jeito que você construiu a barra... Quero ver ainda quanto já foi usado e os trackers mostram
+  o que ainda falta nos pontos." The first bar filled with what was left. It now fills with what was used, the tick
+  marks the time gone, and the hatch between them is what should have been spent by now.

@@ -1,5 +1,5 @@
-// The plan is the bar, the clock is the tick: fill = plan left, tick = time left, hatch = plan on course to go unused.
-import { leftPercent } from '../core/usage'
+// The bar is the window: the fill is what was used, the tick is how much of its time has passed.
+// Where the tick is ahead of the fill, the stretch between them is hatched: plan that should be spent by now.
 import type { WindowReport } from '../core/report'
 import { el } from './dom'
 
@@ -11,15 +11,15 @@ export function paceBar(window: WindowReport, big: boolean, animate: boolean): H
   if (timeLeftPercent !== null) {
     if (atRiskPercent !== null && atRiskPercent > 0) {
       const hatch = el('div', 'hatch')
-      hatch.style.left = `${timeLeftPercent}%`
+      hatch.style.left = `${window.usedPercent}%`
       hatch.style.width = `${atRiskPercent}%`
       bar.append(hatch)
     }
     const tick = el('div', 'tick')
-    tick.style.left = `${timeLeftPercent}%`
+    tick.style.right = `${timeLeftPercent}%`
     bar.append(tick)
   }
-  const width = `${leftPercent(window)}%`
+  const width = `${window.usedPercent}%`
   if (!animate) {
     fill.style.width = width
     return bar

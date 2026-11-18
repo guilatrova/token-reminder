@@ -50,7 +50,13 @@ export function accountDetail(account: OkAccountReport, ctx: ViewContext): HTMLE
       return deadline(level === 'ok' ? 'Reset expires' : 'Reset expires unused', level, reset.expiresAt, ctx)
     }),
   )
-  inner.append(paceBar(main, true, ctx.animate), note(main) ?? '', lines)
+  const caption = el(
+    'div',
+    'caption',
+    el('span', '', `${percent(main.usedPercent)} used`),
+    el('span', '', `${percent(leftPercent(main))} left`),
+  )
+  inner.append(paceBar(main, true, ctx.animate), caption, note(main) ?? '', lines)
   if (account.advice) inner.append(adviceView(account.advice, ctx))
   return el('div', 'detail', el('div', 'clip', inner))
 }
