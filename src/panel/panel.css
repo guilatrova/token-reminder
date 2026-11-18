@@ -1219,3 +1219,12 @@ select {
 .mission-dialog a {
   text-decoration: none;
 }
+
+.mission-share-hint {
+  margin: 8px 0;
+  font-size: 12px;
+  color: var(--orca-muted-foreground);
+}
+.mission-share-hint:empty {
+  display: none;
+}

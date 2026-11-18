@@ -1,5 +1,6 @@
 import type { TiboMission } from '../core/report'
 import { el } from './dom'
+import type { ViewContext } from './format'
 
 function elapsedTime(milliseconds: number) {
   const seconds = Math.max(0, Math.floor(milliseconds / 1000))
@@ -20,13 +21,13 @@ export function missionClock(mission: TiboMission) {
   return clock
 }
 
-export function rewardButton(elapsed: number) {
+export function rewardButton(elapsed: number, openExternal: ViewContext['openExternal']) {
   const claim = el('button', 'mission-claim', 'Ask Tibo for a reset', el('span', '', ' ↗'))
-  claim.onclick = () => showResetTicket(elapsed)
+  claim.onclick = () => showResetTicket(elapsed, openExternal)
   return claim
 }
 
-function showResetTicket(elapsed: number) {
+function showResetTicket(elapsed: number, openExternal: ViewContext['openExternal']) {
   // Round the upper bound up: "under 10s" stays true for a 9.8s run.
   const bound = elapsedTime(elapsed + 1000)
   const canvas = el('canvas', '')
@@ -79,7 +80,41 @@ function showResetTicket(elapsed: number) {
   save.href = image.src
   save.download = 'tibo-reset-ticket.png'
   const close = el('button', 'btn', 'Close')
-  const dialog = el('dialog', 'mission-dialog', image, el('div', '', close, save))
+  const actions = el('div', '', close, save)
+  const hint = el('p', 'mission-share-hint')
+  hint.setAttribute('role', 'status')
+  const draft = new URL('https://twitter.com/intent/tweet')
+  draft.searchParams.set('text', image.alt)
+  const share = el('a', 'btn', 'Share on X')
+  share.href = draft.href
+  share.target = '_blank'
+  share.rel = 'noopener noreferrer'
+  // Keep the draft link usable on a second click if the browser blocks an asynchronous popup.
+  let prepared = false
+  share.onclick = async (event) => {
+    if (prepared) {
+      if (openExternal) {
+        event.preventDefault()
+        openExternal(draft.href)
+      }
+      return
+    }
+    event.preventDefault()
+    try {
+      const png = new Promise<Blob>((resolve, reject) =>
+        canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('PNG unavailable'))), 'image/png'),
+      )
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })])
+      hint.textContent = 'Image copied. Paste it into your X draft.'
+    } catch {
+      hint.textContent = 'Use Save PNG and attach the image to your X draft.'
+    }
+    prepared = true
+    share.textContent = 'Open X draft'
+    share.click()
+  }
+  actions.append(share)
+  const dialog = el('dialog', 'mission-dialog', image, hint, actions)
   dialog.setAttribute('aria-label', 'Reset ticket')
   close.onclick = () => dialog.close()
   dialog.onclose = () => dialog.remove()

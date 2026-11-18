@@ -74,7 +74,9 @@ function accountsView(state: PanelState, report: UsageReport, actions: Actions, 
     openExternal: actions.openExternal,
   }
   const accounts = visibleAccounts(report)
-  const banner = report.tiboReset ? tiboPost(weeklyUsage(accounts), accounts.length, report.tiboReset) : ''
+  const banner = report.tiboReset
+    ? tiboPost(weeklyUsage(accounts), accounts.length, report.tiboReset, actions.openExternal)
+    : ''
   const list =
     accounts.length === 0
       ? el(

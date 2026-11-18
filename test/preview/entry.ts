@@ -41,7 +41,15 @@ Object.assign(window, {
       },
     },
     on: nothing,
-    shell: { openExternal: async (url: string) => (console.log('openExternal', url), { opened: true }) },
+    shell: {
+      openExternal: async (url: string) => {
+        const target = new URL(url)
+        if (target.origin === 'https://twitter.com' && target.pathname === '/intent/tweet') {
+          window.open(target.href, '_blank', 'noopener,noreferrer')
+        } else console.log('openExternal', url)
+        return { opened: true }
+      },
+    },
   },
 })
 await import('../../src/panel/main')

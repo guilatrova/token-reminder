@@ -1,6 +1,7 @@
 import { missionClock, rewardButton } from './tibo-reward'
 import type { weeklyUsage, TiboMission } from '../core/report'
 import { el, icon } from './dom'
+import type { ViewContext } from './format'
 
 function portrait() {
   const image = el('img', 'tibo-portrait')
@@ -50,7 +51,12 @@ const quips = [
   'Damn. You made it in time. Now I owe you a reset.',
 ]
 
-export function tiboPost(weekly: ReturnType<typeof weeklyUsage>, total: number, mission: TiboMission) {
+export function tiboPost(
+  weekly: ReturnType<typeof weeklyUsage>,
+  total: number,
+  mission: TiboMission,
+  openExternal: ViewContext['openExternal'],
+) {
   const { percent, count } = weekly
   const complete = mission.finishedAt !== null
   const milestone = complete ? 4 : percent === null ? null : Math.min(3, Math.floor(percent / 25))
@@ -71,7 +77,7 @@ export function tiboPost(weekly: ReturnType<typeof weeklyUsage>, total: number, 
   const number = percent === null ? '—' : Math.floor(percent) + '%'
   post.append(el('div', 'tibo-stats', missionClock(mission), el('strong', '', number)), meter)
   if (count < total) post.append(el('small', 'tibo-coverage', `Usage available for ${count} of ${total} accounts`))
-  if (mission.finishedAt !== null) post.append(rewardButton(mission.finishedAt - mission.startedAt))
+  if (mission.finishedAt !== null) post.append(rewardButton(mission.finishedAt - mission.startedAt, openExternal))
   return post
 }
 
