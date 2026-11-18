@@ -110,6 +110,9 @@ Opens under the row with a `0.25s` height transition. In order:
    - An unknown date or time reads "unknown".
 5. Advice, when the report carries it: a quiet-fill box with a lightbulb, "Use the 85% before Tue, Nov 24 and you can
    cash in a reset. That is about 14% a day." The second sentence is left out when the report gives no daily pace.
+6. A way out, when the provider has a usage page of its own: a quiet `12px` button in secondary text, "Open usage on
+   claude.ai" with a small external-link icon, that takes the hover fill and opens the page in the browser. Claude has
+   one, because its limit resets only show there. It is left out where Orca cannot open links.
 
 ## Other states
 

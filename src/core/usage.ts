@@ -41,10 +41,12 @@ export type AccountReading =
  */
 export interface UsageSource {
   read(): Promise<AccountReading[]>
+  /** The provider's own usage page, for what it shows there and does not report here. */
+  usagePage?: string
 }
 
 /** A reading with the display name of the provider it came from, e.g. "Codex". */
-export type AccountUsage = AccountReading & { provider: string }
+export type AccountUsage = AccountReading & { provider: string; usagePage?: string }
 
 /** Names one login across reads: what its own alert rules and the panel's open rows are kept under. */
 export function accountKey(usage: Pick<AccountUsage, 'provider' | 'account'>): string {
@@ -56,7 +58,7 @@ export async function readAllUsage(sources: Record<string, UsageSource>): Promis
   const perProvider = await Promise.all(
     Object.entries(sources).map(async ([provider, source]): Promise<AccountUsage[]> => {
       try {
-        return (await source.read()).map((reading) => ({ ...reading, provider }))
+        return (await source.read()).map((reading) => ({ ...reading, provider, usagePage: source.usagePage }))
       } catch (error) {
         const detail = error instanceof Error ? error.message : String(error)
         return [{ provider, status: 'unavailable', account: null, reason: 'unexpected-response', detail }]

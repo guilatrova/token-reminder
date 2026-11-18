@@ -32,6 +32,15 @@ function adviceView(advice: Advice, ctx: ViewContext): HTMLElement {
   return el('div', 'advice', icon('bulb'), el('span', '', text))
 }
 
+/** The way to the provider's own usage page, named by its site: "Open usage on claude.ai". */
+function usagePageLink(url: string, key: string, open: (url: string) => void): HTMLElement {
+  const link = el('button', 'page-link', el('span', '', `Open usage on ${new URL(url).hostname}`), icon('external'))
+  link.type = 'button'
+  link.dataset.focus = `usage-page-${key}`
+  link.addEventListener('click', () => open(url))
+  return link
+}
+
 export function accountDetail(account: OkAccountReport, ctx: ViewContext): HTMLElement {
   const inner = el('div', 'inner')
   if (account.account) inner.append(el('div', 'who-email', account.account))
@@ -52,5 +61,8 @@ export function accountDetail(account: OkAccountReport, ctx: ViewContext): HTMLE
   )
   inner.append(paceBar(main, true, ctx.animate), note(main) ?? '', lines)
   if (account.advice) inner.append(adviceView(account.advice, ctx))
+  if (account.usagePage && ctx.openExternal) {
+    inner.append(usagePageLink(account.usagePage, account.key, ctx.openExternal))
+  }
   return el('div', 'detail', el('div', 'clip', inner))
 }

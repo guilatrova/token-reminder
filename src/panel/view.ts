@@ -24,8 +24,8 @@ export type PanelState = {
 export type Actions = SettingsActions & {
   refresh: () => void
   showSettings: () => void
-  /** Opens the author's page in the browser; null where Orca cannot open links (browser clients). */
-  openCredit: (() => void) | null
+  /** Opens a page in the browser; null where Orca cannot open links (browser clients). */
+  openExternal: ((url: string) => void) | null
   toggle: (key: string, open: boolean) => void
 }
 
@@ -42,12 +42,15 @@ function toolbar(state: PanelState, actions: Actions): HTMLElement {
   )
 }
 
+const AUTHOR_URL = 'https://github.com/guilatrova'
+
 function credit(actions: Actions): HTMLElement | string {
-  if (!actions.openCredit) return ''
+  const open = actions.openExternal
+  if (!open) return ''
   const link = el('button', 'credit', 'Who created this?')
   link.type = 'button'
   link.dataset.focus = 'credit'
-  link.addEventListener('click', actions.openCredit)
+  link.addEventListener('click', () => open(AUTHOR_URL))
   return link
 }
 
@@ -58,6 +61,7 @@ function accountsView(state: PanelState, report: UsageReport, actions: Actions, 
     animate: state.animate,
     opened: state.opened,
     onToggle: actions.toggle,
+    openExternal: actions.openExternal,
   }
   const list =
     report.accounts.length === 0

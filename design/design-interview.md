@@ -121,3 +121,6 @@ Seven notes on the settings running in Orca, all applied:
 - "faltou indentarmos... esses dots yellow/red tá repetitivo, acho que só o texto com cor tá elegante o bastante.
   Acho que poderia ser mais compacto tbm, um pouco menor a fonte?" Rules are indented under their group, the dots are
   gone, and the rows are tighter with a smaller font.
+- On Claude's limit resets, which Anthropic only serves to its own clients: "só deixa documentado no codigo, se no
+  futuro liberar, vamos implementar. Adicionar um button dentro do claude (ao expandir) pra abrir o usage no site."
+  The Claude adapter documents the finding, and its detail has a button to claude.ai/settings/usage.

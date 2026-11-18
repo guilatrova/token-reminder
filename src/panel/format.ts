@@ -9,6 +9,8 @@ export type ViewContext = {
   animate: boolean
   opened: Map<string, boolean>
   onToggle: (key: string, open: boolean) => void
+  /** Opens a page in the browser; null where Orca cannot open links (browser clients). */
+  openExternal: ((url: string) => void) | null
 }
 
 export const percent = (value: number) => `${Math.round(value)}%`

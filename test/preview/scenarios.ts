@@ -36,7 +36,7 @@ function account(
 const SCENARIOS: Record<string, AccountUsage[] | 'loading' | 'error'> = {
   today: [
     account('Codex', 'pro', [weekly(85, 6 * DAY + 4 * HOUR)], [13 * DAY + 9 * HOUR, 24 * DAY + 9 * HOUR]),
-    account('Claude', 'max', [weekly(96, 6 * DAY + 8 * HOUR)]),
+    { ...account('Claude', 'max', [weekly(96, 6 * DAY + 8 * HOUR)]), usagePage: 'https://claude.ai/settings/usage' },
     account('Grok', null, [weekly(89, 5 * DAY + 6 * HOUR)]),
   ],
   'late-week': [

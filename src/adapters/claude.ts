@@ -4,6 +4,20 @@ import type { AccountReading, UsageSource, UsageWindow, WindowKind } from '../co
 import { finite, getJson, isRecord, UsageRequestFailed } from './http'
 
 const USAGE_URL = 'https://api.anthropic.com/api/oauth/usage'
+/** Where the person sees and redeems what this adapter cannot read: their limit resets. */
+const USAGE_PAGE = 'https://claude.ai/settings/usage'
+
+// Limit resets ("Full reset", "Fable reset") are NOT read, on purpose. Checked on 2026-11-18:
+// - They come from this same endpoint with `?cedar_ember=1&skip_spend=1`, as `cedar_ember.grants[]`:
+//   `label`, `type`, `resets_left`, `ends_at`, `usable_now`, `clears[]`. A reset to remind about is a
+//   grant with `resets_left > 0`; `ends_at` is its expiry. That maps onto `resetCredits` as Codex's do.
+// - Anthropic serves the grants only to a request that identifies as the current Claude Code CLI
+//   (`User-Agent: claude-cli/<version> (external, cli)`). With the headers below the answer is
+//   `eligible: false, ineligible_reason: "surface", grants: []` (seen on a real Max account), and
+//   without the query the key is null. This plugin is not that CLI, so it does not claim to be.
+// - Reports: github.com/stablyai/orca/issues/22309, github.com/anthropics/claude-code/issues/102846.
+// When Anthropic serves the grants to other clients, read them here; nothing else has to change.
+// Until then `usagePage` sends the person to the page that shows them.
 const HOUR = 60 * 60 * 1000
 
 /** Where Claude Code keeps its login: a macOS Keychain item, or this file in its config folder elsewhere. */
@@ -80,6 +94,7 @@ export function claudeUsage(config: ClaudeConfig): UsageSource {
   }
 
   return {
+    usagePage: USAGE_PAGE,
     read: async () => {
       const text = await config.readCredentials()
       const login = text === null ? null : parseLogin(text)
