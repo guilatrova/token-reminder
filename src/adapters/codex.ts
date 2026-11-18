@@ -86,11 +86,11 @@ function soonestAvailableExpiry(payload: unknown): number | null {
 }
 
 class RequestFailed extends Error {
-  constructor(
-    readonly reason: UnavailableReason,
-    detail: string,
-  ) {
+  readonly reason: UnavailableReason
+
+  constructor(reason: UnavailableReason, detail: string) {
     super(detail)
+    this.reason = reason
   }
 }
 
