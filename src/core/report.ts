@@ -67,7 +67,11 @@ export type OkAccountReport = Pick<OkUsage, 'provider' | 'account' | 'status' | 
 
 export type AccountReport = OkAccountReport | (UnavailableUsage & { key: string })
 
-export type TiboMission = { startedAt: number; finishedAt: number | null }
+export type TiboMission = {
+  startedAt: number
+  finishedAt: number | null
+  stats?: { accounts: number; localTokens: number | null }
+}
 
 export function restoreMission(value: unknown, now: number): TiboMission | null {
   if (value === true) return { startedAt: now, finishedAt: null }
@@ -76,7 +80,25 @@ export function restoreMission(value: unknown, now: number): TiboMission | null 
   if (typeof startedAt !== 'number' || !Number.isFinite(startedAt)) return null
   if (finishedAt !== null && (typeof finishedAt !== 'number' || !Number.isFinite(finishedAt) || finishedAt < startedAt))
     return null
-  return { startedAt, finishedAt }
+  const mission: TiboMission = { startedAt, finishedAt }
+  if (
+    'stats' in value &&
+    value.stats &&
+    typeof value.stats === 'object' &&
+    'accounts' in value.stats &&
+    'localTokens' in value.stats
+  ) {
+    const { accounts, localTokens } = value.stats
+    if (
+      typeof accounts === 'number' &&
+      Number.isSafeInteger(accounts) &&
+      accounts > 0 &&
+      (localTokens === null ||
+        (typeof localTokens === 'number' && Number.isSafeInteger(localTokens) && localTokens >= 0))
+    )
+      mission.stats = { accounts, localTokens }
+  }
+  return mission
 }
 
 export type UsageReport = {
@@ -206,7 +228,11 @@ export function buildReport(
 export function recordCompletion(report: UsageReport) {
   const mission = report.tiboReset
   if (mission && mission.finishedAt === null && weeklyUsage(visibleAccounts(report)).complete) {
-    report.tiboReset = { ...mission, finishedAt: Math.max(report.readAt, mission.startedAt) }
+    report.tiboReset = {
+      ...mission,
+      finishedAt: Math.max(report.readAt, mission.startedAt),
+      stats: { accounts: visibleAccounts(report).length, localTokens: null },
+    }
   }
 }
 

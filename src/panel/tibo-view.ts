@@ -77,7 +77,8 @@ export function tiboPost(
   const number = percent === null ? '—' : Math.floor(percent) + '%'
   post.append(el('div', 'tibo-stats', missionClock(mission), el('strong', '', number)), meter)
   if (count < total) post.append(el('small', 'tibo-coverage', `Usage available for ${count} of ${total} accounts`))
-  if (mission.finishedAt !== null) post.append(rewardButton(mission.finishedAt - mission.startedAt, openExternal))
+  if (mission.finishedAt !== null)
+    post.append(rewardButton(mission.finishedAt - mission.startedAt, mission.stats, openExternal))
   return post
 }
 

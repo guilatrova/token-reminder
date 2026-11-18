@@ -143,6 +143,8 @@ export function fakeWorker(
       mission = { startedAt: Date.now(), finishedAt: null }
     const report = buildReport(accounts, rules, Date.now(), mission)
     recordCompletion(report)
+    if (report.tiboReset?.finishedAt != null && simulatedUsage)
+      report.tiboReset.stats = { accounts: accounts.length, localTokens: 1248576 }
     mission = report.tiboReset ?? null
     if (simulatedUsage) localStorage.setItem('tibo-preview-mission', JSON.stringify(mission))
     return report

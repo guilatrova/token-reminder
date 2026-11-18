@@ -23,6 +23,7 @@ export async function start(
   orca: OrcaWorkerApi,
   sources: Record<string, UsageSource>,
   now: () => number = Date.now,
+  missionTokens?: (start: number, end: number) => Promise<number | null>,
 ): Promise<() => void> {
   let lastRead: { accounts: AccountUsage[]; at: number } | null = null
   let reading: Promise<UsageReport> | null = null
@@ -63,7 +64,11 @@ export async function start(
       const report = buildReport(accounts, rules, now(), mission)
       if (mission && observedMission === mission) recordCompletion(report)
       if (report.tiboReset && report.tiboReset !== mission) {
-        await orca.storage.set('tiboReset', report.tiboReset)
+        const completed = report.tiboReset
+        if (missionTokens && completed.stats && completed.finishedAt !== null) {
+          completed.stats.localTokens = await missionTokens(completed.startedAt, completed.finishedAt).catch(() => null)
+        }
+        await orca.storage.set('tiboReset', completed)
         mission = report.tiboReset
         applyStatusBarPreference()
       }

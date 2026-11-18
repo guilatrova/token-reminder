@@ -21,18 +21,18 @@ export function missionClock(mission: TiboMission) {
   return clock
 }
 
-export function rewardButton(elapsed: number, openExternal: ViewContext['openExternal']) {
+export function rewardButton(elapsed: number, stats: TiboMission['stats'], openExternal: ViewContext['openExternal']) {
   const claim = el('button', 'mission-claim', 'Ask Tibo for a reset', el('span', '', ' ↗'))
-  claim.onclick = () => showResetTicket(elapsed, openExternal)
+  claim.onclick = () => showResetTicket(elapsed, stats, openExternal)
   return claim
 }
 
-function showResetTicket(elapsed: number, openExternal: ViewContext['openExternal']) {
+function showResetTicket(elapsed: number, stats: TiboMission['stats'], openExternal: ViewContext['openExternal']) {
   // Round the upper bound up: "under 10s" stays true for a 9.8s run.
   const bound = elapsedTime(elapsed + 1000)
   const canvas = el('canvas', '')
   canvas.width = 1080
-  canvas.height = 640
+  canvas.height = 658
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('Your browser could not draw the reset ticket.')
   const gradient = ctx.createLinearGradient(0, 0, 1080, 640)
@@ -40,7 +40,7 @@ function showResetTicket(elapsed: number, openExternal: ViewContext['openExterna
   gradient.addColorStop(0.66, '#163b34')
   gradient.addColorStop(1, '#374d35')
   ctx.fillStyle = gradient
-  ctx.fillRect(0, 0, 1080, 640)
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
   ctx.save()
   ctx.strokeStyle = '#abf3c826'
   for (let i = 0; i < 22; i++) {
@@ -66,12 +66,25 @@ function showResetTicket(elapsed: number, openExternal: ViewContext['openExterna
   ctx.stroke()
   ctx.fillStyle = '#adf3ca'
   ctx.font = 'bold 23px monospace'
-  ctx.fillText('MISSION ACCOMPLISHED', 64, 590)
+  const accountLabel = stats
+    ? `${stats.accounts} Codex account${stats.accounts === 1 ? '' : 's'}`
+    : 'Codex accounts unavailable'
+  const tokenLabel =
+    stats?.localTokens != null
+      ? `${stats.localTokens.toLocaleString('en-US')} local tokens`
+      : 'Local tokens unavailable'
+  ctx.fillText('MISSION ACCOMPLISHED', 64, 570)
   ctx.textAlign = 'right'
-  ctx.fillText('100% USED', 1016, 590)
+  ctx.fillText('100% USED', 1016, 570)
+  ctx.textAlign = 'left'
+  ctx.fillStyle = '#d9e4dd'
+  ctx.font = '26px system-ui'
+  ctx.fillText(accountLabel, 64, 618, 410)
+  ctx.textAlign = 'right'
+  ctx.fillText(tokenLabel, 1016, 618, 490)
 
   const image = el('img', 'mission-ticket')
-  image.alt = `Tibo, I burned all my tokens in under ${bound} and now you owe me a reset.`
+  image.alt = `Tibo, I burned all my tokens in under ${bound} and now you owe me a reset. ${accountLabel} · ${tokenLabel}.`
   image.src = canvas.toDataURL('image/png')
   const save = el('a', 'btn', 'Save PNG')
   save.href = image.src

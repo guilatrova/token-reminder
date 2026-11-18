@@ -57,7 +57,7 @@ export default async function activate(orca: OrcaWorkerApi): Promise<void> {
     Codex: codexUsage({ homes: await codexHomes(), readFile: readTextIfPresent, fetch }),
     Grok: grokUsage({ authFile: grokAuthFile, readFile: readTextIfPresent, fetch, now: Date.now }),
   }
-  stop = await start(orca, sources)
+  stop = await start(orca, sources, Date.now, sources.Codex.missionTokens)
 }
 
 export function deactivate(): void {

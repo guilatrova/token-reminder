@@ -194,7 +194,7 @@ test('Tibo keeps its clock and earned reward across restarts until the person le
   assert.deepEqual((await reopened.request('tibo.set', { active: true })).tiboReset, active.tiboReset)
   remaining = 0
   const finished = (await reopened.request('usage.read')).tiboReset
-  assert.deepEqual(finished, { startedAt: 10000, finishedAt: 22000 })
+  assert.deepEqual(finished, { startedAt: 10000, finishedAt: 22000, stats: { accounts: 1, localTokens: null } })
   await reopened.deactivate()
   remaining = 100
   now += 5000
