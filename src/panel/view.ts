@@ -13,6 +13,8 @@ export type PanelState = {
   loading: boolean
   error: string | null
   view: 'accounts' | 'settings'
+  /** Whose alert rules the settings show: an account's key, or null for the general ones. */
+  scope: string | null
   /** The person's own open and close choices; a missing key means "open when the account needs spending". */
   opened: Map<string, boolean>
   /** True until a report has been drawn once, so refreshes do not replay the bar animation. */
@@ -103,6 +105,6 @@ export function panelView(state: PanelState, actions: Actions, locale: string): 
     if (state.loading || state.error === null) return loadingView()
     return failedView(state.error, actions)
   }
-  if (state.view === 'settings') return settingsView(report.rules, state.preferences, state.error, actions)
+  if (state.view === 'settings') return settingsView(report, state.preferences, state.scope, state.error, actions)
   return accountsView(state, report, actions, locale)
 }

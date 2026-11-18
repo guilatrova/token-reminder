@@ -1,6 +1,6 @@
 // Wires the panel to Orca: asks the worker for the report, keeps the state, and redraws on every change.
 import '../protocol'
-import type { AlertRule } from '../core/alerts'
+import type { AlertRules } from '../core/alerts'
 import type { Preferences } from '../preferences'
 import type { UsageReport } from '../core/report'
 import { panelView, type Actions, type PanelState } from './view'
@@ -16,6 +16,7 @@ const state: PanelState = {
   loading: true,
   error: null,
   view: 'accounts',
+  scope: null,
   opened: new Map(),
   animate: true,
 }
@@ -25,7 +26,7 @@ function render() {
   const focusKey = active instanceof HTMLElement ? active.dataset.focus : undefined
   root?.replaceChildren(panelView(state, actions, orca.locale))
   if (state.report && state.view === 'accounts') state.animate = false
-  if (focusKey) root?.querySelector<HTMLElement>(`[data-focus="${focusKey}"]`)?.focus()
+  if (focusKey) root?.querySelector<HTMLElement>(`[data-focus="${CSS.escape(focusKey)}"]`)?.focus()
 }
 
 /** Asks the worker for something and keeps the answer; a failure leaves what was on screen and says why. */
@@ -52,9 +53,13 @@ const keepPreferences = (preferences: Preferences) => void (state.preferences = 
 
 const actions: Actions = {
   refresh: () => run(() => orca.plugin.request('usage.read'), keepReport),
-  saveRules: (rules: AlertRule[]) => run(() => orca.plugin.request('rules.save', { rules }), keepReport),
+  saveRules: (rules: AlertRules) => run(() => orca.plugin.request('rules.save', { rules }), keepReport),
   savePreferences: (preferences: Preferences) =>
     run(() => orca.plugin.request('preferences.save', preferences), keepPreferences),
+  showScope: (accountKey) => {
+    state.scope = accountKey
+    render()
+  },
   showSettings: () => {
     state.view = 'settings'
     render()

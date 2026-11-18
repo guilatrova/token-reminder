@@ -1,5 +1,5 @@
 // The panel <-> worker contract, declared once: src/panel/main.ts and src/app.ts both read it.
-import type { AlertRule } from './core/alerts'
+import type { AlertRules } from './core/alerts'
 import type { UsageReport } from './core/report'
 import type { Preferences } from './preferences'
 
@@ -13,7 +13,7 @@ declare module 'orca' {
     /** Reads every provider now and answers the fresh report. */
     'usage.read': { output: UsageReport }
     /** Replaces the alert rules and answers the last read judged by them. It does not read the providers. */
-    'rules.save': { input: { rules: AlertRule[] }; output: UsageReport }
+    'rules.save': { input: { rules: AlertRules }; output: UsageReport }
     'preferences.read': { output: Preferences }
     /** Replaces the preferences and answers them as stored. */
     'preferences.save': { input: Preferences; output: Preferences }

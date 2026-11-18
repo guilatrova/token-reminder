@@ -6,37 +6,122 @@ const DAY = 24 * HOUR
 
 export type AlertLevel = 'ok' | 'warning' | 'urgent'
 
+/** `mark` only draws the rule on the bar, as a spend to aim for; it never alerts. */
+export type RuleLevel = 'mark' | Exclude<AlertLevel, 'ok'>
+
 export type AlertRule = {
-  /** Fires when the reset is at most this far away. */
+  /** Fires when the deadline is at most this far away. */
   withinMs: number
-  /** ...and at least this much of the window is still unused. */
+  /** ...and at least this much of the plan is still unused. */
   minLeftPercent: number
-  level: Exclude<AlertLevel, 'ok'>
+  level: RuleLevel
 }
 
-export const DEFAULT_ALERT_RULES: AlertRule[] = [
-  { withinMs: 2 * DAY, minLeftPercent: 50, level: 'warning' },
-  { withinMs: DAY, minLeftPercent: 70, level: 'urgent' },
-  { withinMs: 10 * HOUR, minLeftPercent: 90, level: 'urgent' },
-]
+/** What a rule's deadline is: the `plan` window resetting, or a rate limit `reset` expiring unredeemed. */
+export const RULE_KINDS = ['plan', 'reset'] as const
+export type RuleKind = (typeof RULE_KINDS)[number]
+export type RuleSet = Record<RuleKind, AlertRule[]>
+
+export type AlertRules = {
+  general: RuleSet
+  /** By account key. A kind an account has replaces the general one for it; a kind it lacks follows general. */
+  accounts: Record<string, Partial<RuleSet>>
+}
+
+export const DEFAULT_ALERT_RULES: AlertRules = {
+  general: {
+    plan: [
+      { withinMs: 2 * DAY, minLeftPercent: 50, level: 'warning' },
+      { withinMs: DAY, minLeftPercent: 70, level: 'urgent' },
+      { withinMs: 10 * HOUR, minLeftPercent: 90, level: 'urgent' },
+    ],
+    // A reset is worth a whole plan window, so it is worth spending however much of the plan is left.
+    reset: [
+      { withinMs: 10 * DAY, minLeftPercent: 0, level: 'warning' },
+      { withinMs: 5 * DAY, minLeftPercent: 0, level: 'urgent' },
+    ],
+  },
+  accounts: {},
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
 
 function isAlertRule(value: unknown): value is AlertRule {
-  if (typeof value !== 'object' || value === null) return false
-  const { withinMs, minLeftPercent, level } = value as Record<string, unknown>
+  if (!isRecord(value)) return false
+  const { withinMs, minLeftPercent, level } = value
   const within = typeof withinMs === 'number' && Number.isFinite(withinMs) && withinMs > 0
   const left = typeof minLeftPercent === 'number' && minLeftPercent >= 0 && minLeftPercent <= 100
-  return within && left && (level === 'warning' || level === 'urgent')
+  return within && left && (level === 'mark' || level === 'warning' || level === 'urgent')
 }
 
-/** Rules as they come from storage or a request; null when the value is not a list of valid rules. */
-export function parseAlertRules(value: unknown): AlertRule[] | null {
-  return Array.isArray(value) && value.every(isAlertRule) ? value : null
+function isRuleList(value: unknown): value is AlertRule[] {
+  return Array.isArray(value) && value.every(isAlertRule)
+}
+
+/** A rule set where every kind present is a valid list; `complete` also wants every kind present. */
+function parseRuleSet(value: unknown, complete: boolean): Partial<RuleSet> | null {
+  if (!isRecord(value)) return null
+  const set: Partial<RuleSet> = {}
+  for (const kind of RULE_KINDS) {
+    const list = value[kind]
+    if (list === undefined && !complete) continue
+    if (!isRuleList(list)) return null
+    set[kind] = list
+  }
+  return set
+}
+
+/** Rules as they come from storage or a request; null when the value is not valid. */
+export function parseAlertRules(value: unknown): AlertRules | null {
+  // Before rules had kinds and accounts, the saved value was the list of general plan rules.
+  if (isRuleList(value)) return { ...DEFAULT_ALERT_RULES, general: { ...DEFAULT_ALERT_RULES.general, plan: value } }
+  if (!isRecord(value) || !isRecord(value.accounts)) return null
+  const general = parseRuleSet(value.general, true)
+  if (!general) return null
+  const accounts: AlertRules['accounts'] = {}
+  for (const [key, own] of Object.entries(value.accounts)) {
+    const set = parseRuleSet(own, false)
+    if (!set) return null
+    accounts[key] = set
+  }
+  return { general: general as RuleSet, accounts }
+}
+
+/** The rules one account is judged by. */
+export function rulesFor(rules: AlertRules, accountKey: string): RuleSet {
+  const own = rules.accounts[accountKey]
+  return { plan: own?.plan ?? rules.general.plan, reset: own?.reset ?? rules.general.reset }
+}
+
+/**
+ * The rules with one list replaced: the general one when `accountKey` is null, otherwise that account's own.
+ * A null list makes the account follow general again; the general list cannot be null.
+ */
+export function withRuleList(
+  rules: AlertRules,
+  accountKey: string | null,
+  kind: RuleKind,
+  list: AlertRule[] | null,
+): AlertRules {
+  if (accountKey === null) {
+    if (list === null) throw new Error('The general rules cannot follow anything.')
+    return { ...rules, general: { ...rules.general, [kind]: list } }
+  }
+  const own: Partial<RuleSet> = { ...rules.accounts[accountKey] }
+  if (list === null) delete own[kind]
+  else own[kind] = list
+  const accounts = { ...rules.accounts }
+  if (Object.keys(own).length === 0) delete accounts[accountKey]
+  else accounts[accountKey] = own
+  return { ...rules, accounts }
 }
 
 /** The session window resets every few hours, so losing its leftover is routine, not news. */
 const TRACKED_KINDS: WindowKind[] = ['weekly', 'monthly']
 
-const SEVERITY: Record<AlertLevel, number> = { ok: 0, warning: 1, urgent: 2 }
+const SEVERITY: Record<AlertLevel | RuleLevel, number> = { ok: 0, mark: 0, warning: 1, urgent: 2 }
 
 export type Alert = { level: AlertLevel; rule: AlertRule | null }
 
@@ -48,6 +133,7 @@ export function worseLevel(a: AlertLevel, b: AlertLevel): AlertLevel {
 export function judge(untilMs: number, leftPercent: number, rules: AlertRule[]): Alert {
   let worst: Alert = { level: 'ok', rule: null }
   for (const rule of rules) {
+    if (rule.level === 'mark') continue
     const matches = untilMs <= rule.withinMs && leftPercent >= rule.minLeftPercent
     if (matches && SEVERITY[rule.level] > SEVERITY[worst.level]) worst = { level: rule.level, rule }
   }
@@ -70,6 +156,13 @@ export function formatDuration(ms: number): string {
   return parts.slice(0, 2).join(' ') || '0m'
 }
 
-export function describeRule(rule: AlertRule): string {
-  return `${formatDuration(rule.withinMs)} or less to reset with ${rule.minLeftPercent}% or more left`
+/** "≤ 2d to reset, ≥ 50% left": a rule as the settings spell it. */
+export function describeRule(rule: AlertRule, kind: RuleKind): string {
+  const deadline = kind === 'plan' ? 'to reset' : 'to expire'
+  return `≤ ${formatDuration(rule.withinMs)} ${deadline}, ≥ ${rule.minLeftPercent}% left`
+}
+
+/** Whether `a` is the more severe rule level; a mark is the least. */
+export function isWorseRule(a: RuleLevel, b: RuleLevel): boolean {
+  return SEVERITY[a] > SEVERITY[b]
 }

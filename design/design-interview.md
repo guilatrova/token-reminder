@@ -89,3 +89,16 @@ Unprompted, on the panel running in Orca:
 - "Podemos adicionar uma config em settings pra hide a status bar no footer? ... (fica on by default)." A switch in
   Settings, on by default.
 - "Os icones das ias que vc add: remover borda ao redor, deixar clean." The provider marks lost their box and border.
+
+## Q6. Rule groups and marks
+
+Unprompted, then four decisions answered in a plan (all as proposed):
+
+- "Os alertas precisam ter 'grupos': General (o que já estamos configurando), Por conta (adicional e sobrescreve o
+  general), e.g. pro claude quero só ser alertado se..." Tabs in Settings; an account's rules replace the general
+  ones for it.
+- "cada 'regra' vira um pequena linha na barra da pag principal, tipo: 50% left vira uma barra tracejada... tem que
+  ter a opcao sem cor tbm pra só criar uma barrinha de marcação de um gasto esperado." Plan rules are dashed marks on
+  the bar; "No colour" is a rule that only marks.
+- "weekly reset e rate limit reset - sao grupos de regras diferentes." Two groups, with their own built-in rules
+  (reset: yellow at ≤ 10d, red at ≤ 5d). Reset rules draw no marks. The status bar names the reset when it alerts.

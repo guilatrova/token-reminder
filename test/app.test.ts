@@ -2,6 +2,7 @@ import { assert, mountWorker, test } from 'orca/testing'
 import type { OrcaWorkerApi } from 'orca/worker'
 import { memoryUsage } from '../src/adapters/memory'
 import { start } from '../src/app'
+import { DEFAULT_ALERT_RULES, withRuleList } from '../src/core/alerts'
 import type { AccountReading, UsageSource } from '../src/core/usage'
 
 const HOUR = 60 * 60 * 1000
@@ -96,11 +97,13 @@ test('saved rules replace the built-in ones and survive a restart', async () => 
   const sources = { Alpha: memoryUsage([reading(30, 100)]) }
   const worker = await mountWorker(workerWith(sources))
   assert.equal((lastStatusBar(await request(worker, 'usage.read')) as { tone: string }).tone, 'neutral')
-  const rules = [{ withinMs: 120 * HOUR, minLeftPercent: 20, level: 'urgent' as const }]
+  const strict = { withinMs: 120 * HOUR, minLeftPercent: 20, level: 'urgent' as const }
+  const rules = withRuleList(DEFAULT_ALERT_RULES, null, 'plan', [strict])
   const report = await worker.request('rules.save', { rules })
   assert.deepEqual(report.rules, rules)
   assert.equal((lastStatusBar(worker) as { tone: string }).tone, 'danger')
-  await assert.rejects(worker.request('rules.save', { rules: [{ ...rules[0]!, minLeftPercent: 140 }] }))
+  const invalid = withRuleList(rules, null, 'plan', [{ ...strict, minLeftPercent: 140 }])
+  await assert.rejects(worker.request('rules.save', { rules: invalid }))
   await worker.deactivate()
 
   const restarted = await mountWorker(workerWith(sources), { host: worker.host })
@@ -114,7 +117,8 @@ test('answers the panel from the last read, and changing the rules asks no provi
   await worker.request('usage.latest')
   await worker.request('usage.latest')
   assert.equal(alpha.reads, 1)
-  const rules = [{ withinMs: 120 * HOUR, minLeftPercent: 20, level: 'urgent' as const }]
+  const strict = { withinMs: 120 * HOUR, minLeftPercent: 20, level: 'urgent' as const }
+  const rules = withRuleList(DEFAULT_ALERT_RULES, null, 'plan', [strict])
   const report = await worker.request('rules.save', { rules })
   assert.equal(report.accounts[0]?.status === 'ok' && report.accounts[0].level, 'urgent')
   assert.equal(alpha.reads, 1)
@@ -168,4 +172,14 @@ test('the status bar item can be hidden, stays hidden across a restart and comes
   const shown = lastStatusBar(restarted) as { visible: boolean; text: string }
   assert.deepEqual([shown.visible, shown.text], [true, 'Alpha 90% left · 6d 6h'])
   await restarted.deactivate()
+})
+
+test('a reset about to expire is what the status bar says', async () => {
+  const expiring = reading(84, 150)
+  if (expiring.status === 'ok') expiring.resetCredits = { available: 1, expiresAt: [Date.now() + 100 * HOUR] }
+  const worker = await mountWorker(workerWith({ Alpha: memoryUsage([expiring]) }))
+  await worker.request('usage.read')
+  const shown = lastStatusBar(worker) as { text: string; tone: string }
+  assert.deepEqual([shown.text, shown.tone], ['Alpha reset expires · 4d 4h', 'danger'])
+  await worker.deactivate()
 })

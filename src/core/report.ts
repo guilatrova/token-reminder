@@ -1,7 +1,17 @@
 // What the panel and the status bar show: every account's usage with its alerts, worst first.
 // Everything a surface displays is worked out here; surfaces only draw it.
-import { evaluateAlert, judge, worseLevel, type Alert, type AlertLevel, type AlertRule } from './alerts'
-import { leftPercent, type AccountUsage, type UsageWindow } from './usage'
+import {
+  evaluateAlert,
+  isWorseRule,
+  judge,
+  rulesFor,
+  worseLevel,
+  type Alert,
+  type AlertLevel,
+  type AlertRule,
+  type AlertRules,
+} from './alerts'
+import { accountKey, leftPercent, type AccountUsage, type UsageWindow } from './usage'
 
 const DAY = 24 * 60 * 60 * 1000
 
@@ -11,7 +21,12 @@ export type WindowReport = UsageWindow & {
   timeLeftPercent: number | null
   /** Plan left beyond the time left: what is on course to go unused. Null when the reset time is unknown. */
   atRiskPercent: number | null
+  /** The account's plan rules as places on the bar, left to right. Only the main window has them. */
+  marks: RuleMark[]
 }
+
+/** A plan rule drawn on the bar: the share used at which the rule stops matching. */
+export type RuleMark = { usedPercent: number; rule: AlertRule }
 
 /** One reset the account can still redeem. Judged like a window: its expiry against the plan left. */
 export type ResetReport = { expiresAt: number | null; alert: Alert | null }
@@ -29,6 +44,7 @@ type OkUsage = Extract<AccountUsage, { status: 'ok' }>
 type UnavailableUsage = Extract<AccountUsage, { status: 'unavailable' }>
 
 export type OkAccountReport = Pick<OkUsage, 'provider' | 'account' | 'status' | 'plan'> & {
+  key: string
   /** Longest window first: the first one is the plan period and drives the account's summary. */
   windows: WindowReport[]
   resets: ResetReport[]
@@ -37,11 +53,11 @@ export type OkAccountReport = Pick<OkUsage, 'provider' | 'account' | 'status' | 
   level: AlertLevel
 }
 
-export type AccountReport = OkAccountReport | UnavailableUsage
+export type AccountReport = OkAccountReport | (UnavailableUsage & { key: string })
 
 export type UsageReport = {
   accounts: AccountReport[]
-  rules: AlertRule[]
+  rules: AlertRules
   /** Epoch ms when this report was worked out. Every time left counts from here. */
   readAt: number
 }
@@ -52,7 +68,20 @@ function reportWindow(window: UsageWindow, rules: AlertRule[], now: number): Win
   const timeLeftPercent =
     window.resetsAt === null ? null : Math.min(100, Math.max(0, ((window.resetsAt - now) / window.lengthMs) * 100))
   const atRiskPercent = timeLeftPercent === null ? null : Math.max(0, leftPercent(window) - timeLeftPercent)
-  return { ...window, alert: evaluateAlert(window, rules, now), timeLeftPercent, atRiskPercent }
+  return { ...window, alert: evaluateAlert(window, rules, now), timeLeftPercent, atRiskPercent, marks: [] }
+}
+
+/** One mark per place on the bar; where rules share a place, the most severe one is shown. */
+function ruleMarks(rules: AlertRule[]): RuleMark[] {
+  const byPlace = new Map<number, AlertRule>()
+  for (const rule of rules) {
+    const usedPercent = 100 - rule.minLeftPercent
+    const shown = byPlace.get(usedPercent)
+    if (!shown || isWorseRule(rule.level, shown.level)) byPlace.set(usedPercent, rule)
+  }
+  return [...byPlace]
+    .map(([usedPercent, rule]) => ({ usedPercent, rule }))
+    .sort((a, b) => a.usedPercent - b.usedPercent)
 }
 
 function advise(main: WindowReport | undefined, resetCount: number, now: number): Advice | null {
@@ -63,21 +92,28 @@ function advise(main: WindowReport | undefined, resetCount: number, now: number)
   return { leftPercent: left, before: main.resetsAt, perDayPercent: until >= DAY ? left / (until / DAY) : null }
 }
 
-function reportAccount(usage: AccountUsage, rules: AlertRule[], now: number): AccountReport {
-  if (usage.status === 'unavailable') return usage
+function reportAccount(usage: AccountUsage, allRules: AlertRules, now: number): AccountReport {
+  const key = accountKey(usage)
+  if (usage.status === 'unavailable') return { ...usage, key }
+  const rules = rulesFor(allRules, key)
   const windows = usage.windows
-    .map((window) => reportWindow(window, rules, now))
+    .map((window) => reportWindow(window, rules.plan, now))
     .sort((a, b) => b.lengthMs - a.lengthMs)
   const main = windows[0]
+  if (main?.alert) main.marks = ruleMarks(rules.plan)
   const credits = usage.resetCredits
-  // A reset cannot be put to use while the plan is still full, so its expiry is judged against the plan left.
+  // A reset has rules of its own: its expiry is the deadline, judged with the plan left like a window is.
   const resets = Array.from({ length: credits?.available ?? 0 }, (_, index): ResetReport => {
     const expiresAt = credits?.expiresAt[index] ?? null
-    return { expiresAt, alert: main && expiresAt !== null ? judge(expiresAt - now, leftPercent(main), rules) : null }
+    return {
+      expiresAt,
+      alert: main && expiresAt !== null ? judge(expiresAt - now, leftPercent(main), rules.reset) : null,
+    }
   })
   const alerts = [...windows, ...resets].map((judged) => judged.alert?.level ?? 'ok')
   const { provider, account, status, plan } = usage
   return {
+    key,
     provider,
     account,
     status,
@@ -93,12 +129,28 @@ function sortRank(account: AccountReport): number {
   return account.status === 'ok' ? ORDER[account.level] : ORDER.ok + 1
 }
 
-export function buildReport(accounts: AccountUsage[], rules: AlertRule[], now: number): UsageReport {
+export function buildReport(accounts: AccountUsage[], rules: AlertRules, now: number): UsageReport {
   const reported = accounts.map((usage) => reportAccount(usage, rules, now))
   return { accounts: reported.sort((a, b) => sortRank(a) - sortRank(b)), rules, readAt: now }
 }
 
-export type Headline = { provider: string; leftPercent: number; level: AlertLevel; resetsAt: number }
+export type Headline = {
+  provider: string
+  leftPercent: number
+  level: AlertLevel
+  resetsAt: number
+  /** Epoch ms of the soonest reset behind the account's level, when a reset and not the plan window is behind it. */
+  expiringReset: number | null
+}
+
+/** The reset that explains an account's level, when its main window alone does not. */
+function expiringReset(account: OkAccountReport, main: WindowReport): number | null {
+  if (account.level === 'ok' || main.alert?.level === account.level) return null
+  const expiries = account.resets.flatMap((reset) =>
+    reset.alert?.level === account.level && reset.expiresAt !== null ? [reset.expiresAt] : [],
+  )
+  return expiries.length ? Math.min(...expiries) : null
+}
 
 /** The most pressing account by its main window: worst level first, then the soonest reset. */
 export function headline(report: UsageReport): Headline | null {
@@ -111,6 +163,7 @@ export function headline(report: UsageReport): Headline | null {
       leftPercent: leftPercent(main),
       level: account.level,
       resetsAt: main.resetsAt,
+      expiringReset: expiringReset(account, main),
     }
     const beats =
       !best ||

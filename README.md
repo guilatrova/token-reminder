@@ -13,9 +13,11 @@ and much of what you paid for is still there.
   the right sidebar, where the panel lives.
 - **Panel:** for each account, every plan window and every rate-limit reset you can still redeem, with the date it
   ends and the time left.
-- Turns yellow or red from your alert rules (built in: reset within 2d with 50% left, 1d with 70%, 10h with 90%).
-  Weekly and monthly windows are judged; the short session window is not.
-- **Settings** (the gear): edit the alert rules, and hide the status bar item.
+- Turns yellow or red from your alert rules. Plan resets (built in: reset within 2d with 50% left, 1d with 70%, 10h
+  with 90%) and rate-limit resets about to expire (built in: yellow within 10d, red within 5d) have rules of their
+  own. Weekly and monthly windows are judged; the short session window is not.
+- Each plan rule is a dashed mark on the account's bar. A rule with no colour only marks a spend to aim for.
+- **Settings** (the gear): edit the rules for every account or for one account, and hide the status bar item.
 - Re-reads every 10 minutes while the status bar item shows. Opening the panel shows the last read at once and only
   asks the providers again when that read is over 2 minutes old.
 

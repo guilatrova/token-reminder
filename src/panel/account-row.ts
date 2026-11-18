@@ -7,8 +7,6 @@ import { percent, shortDate, timeLeft, type ViewContext } from './format'
 import { paceBar } from './pace-bar'
 import { PROVIDER_MARKS } from './provider-marks'
 
-const accountKey = (account: AccountReport) => `${account.provider}\n${account.account ?? ''}`
-
 function avatar(provider: string): HTMLElement {
   const mark = PROVIDER_MARKS[provider.toLowerCase()]
   if (!mark) return el('span', 'avatar', provider.slice(0, 2))
@@ -33,7 +31,7 @@ function tanks(account: OkAccountReport, ctx: ViewContext): HTMLElement {
 }
 
 function okAccount(account: OkAccountReport, ctx: ViewContext): HTMLElement {
-  const key = accountKey(account)
+  const { key } = account
   const open = ctx.opened.get(key) ?? account.level !== 'ok'
   const main = account.windows[0]
   const row = el(

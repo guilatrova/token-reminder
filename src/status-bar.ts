@@ -39,7 +39,10 @@ export function statusBarView(report: UsageReport): StatusBarView {
     const text = report.accounts.length === 0 ? 'No accounts' : 'Usage unavailable'
     return { text, tone: 'neutral', tooltip: tooltip || 'No account managed by Orca was found.' }
   }
-  const text = `${top.provider} ${Math.round(top.leftPercent)}% left · ${formatDuration(top.resetsAt - now)}`
+  const text =
+    top.expiringReset === null
+      ? `${top.provider} ${Math.round(top.leftPercent)}% left · ${formatDuration(top.resetsAt - now)}`
+      : `${top.provider} reset expires · ${formatDuration(top.expiringReset - now)}`
   // On track stays neutral so the item blends in until something needs spending.
   return { text, tone: top.level === 'ok' ? 'neutral' : LEVEL_TONE[top.level], tooltip }
 }

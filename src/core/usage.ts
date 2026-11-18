@@ -46,6 +46,11 @@ export interface UsageSource {
 /** A reading with the display name of the provider it came from, e.g. "Codex". */
 export type AccountUsage = AccountReading & { provider: string }
 
+/** Names one login across reads: what its own alert rules and the panel's open rows are kept under. */
+export function accountKey(usage: Pick<AccountUsage, 'provider' | 'account'>): string {
+  return `${usage.provider}\n${usage.account ?? ''}`
+}
+
 /** Reads every source, keyed by provider name. One provider failing never hides the others. */
 export async function readAllUsage(sources: Record<string, UsageSource>): Promise<AccountUsage[]> {
   const perProvider = await Promise.all(

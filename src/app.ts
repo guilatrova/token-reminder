@@ -1,7 +1,7 @@
 // What the worker does, given its usage sources: keep the last read, answer the panel from it,
 // re-read on a timer and keep the status bar item on the most pressing window. It never names a provider.
 import type { OrcaWorkerApi } from 'orca/worker'
-import { DEFAULT_ALERT_RULES, parseAlertRules, type AlertRule } from './core/alerts'
+import { DEFAULT_ALERT_RULES, parseAlertRules, type AlertRules } from './core/alerts'
 import { buildReport, type UsageReport } from './core/report'
 import { readAllUsage, type AccountUsage, type UsageSource } from './core/usage'
 import { DEFAULT_PREFERENCES, parsePreferences, type Preferences } from './preferences'
@@ -34,7 +34,7 @@ export async function start(
   let preferences: Preferences = parsed
 
   /** The person's rules; the built-in ones until they save their own. */
-  async function storedRules(): Promise<AlertRule[]> {
+  async function storedRules(): Promise<AlertRules> {
     const stored = await orca.storage.get(RULES_KEY)
     if (stored === null || stored === undefined) return DEFAULT_ALERT_RULES
     const rules = parseAlertRules(stored)

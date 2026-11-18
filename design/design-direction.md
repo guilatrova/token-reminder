@@ -12,6 +12,7 @@ Decided in [design-interview.md](design-interview.md). This file is the specific
 ## Surfaces
 
 - **Status bar item** (`gauge` icon): the most pressing account, "Codex 85% left · 6d 4h", neutral, yellow or red.
+  When a rate limit reset, not the plan window, is what alerts, it reads "Codex reset expires · 4d 9h".
 - **Panel** (`gauge` icon, right sidebar): an HTML page, because Orca's declarative components cannot colour a bar or
   draw the gauge. Orca's icon list has no token or coin, so `gauge` stands for the fuel-gauge idea.
 
@@ -83,7 +84,11 @@ The bar is the window, read left to right as both the plan and the clock:
 - **Slim at rest, fat on hover**: the bar is `4px` high. Hovering it thickens it to `14px` and shows a tooltip at the
   end of the fill, "26% used": popover colours, a hairline border, `6px` radius, `11px/600`. Above the bar in a row,
   below it in the detail. The bar keeps a `14px` box, so thickening moves nothing.
-- With an unknown reset time there is no tick and no hatch.
+- **Rule marks**: each plan rule of the account is a `2px` dashed vertical line, as tall as the bar's `14px` box, at
+  the share used where the rule stops matching (a rule with "≥ 50% left" sits at 50% used). It takes the rule's
+  colour; a rule with no colour is drawn in secondary text colour. Rules at the same place show as one mark, the most
+  severe. Pointing at a mark names the rule: "Yellow: ≤ 2d to reset, ≥ 50% left". Reset rules draw no marks.
+- With an unknown reset time there is no tick, no hatch and no marks.
 - The fill grows from 0 in `0.7s`; the hatch fades in after it. No motion under `prefers-reduced-motion`.
 
 ## The detail
@@ -134,18 +139,34 @@ The gear swaps the list for the settings. Its first line takes the toolbar's pla
 Sections are spaced apart, each under an `11px/600` uppercase label in faint text. One surface: no cards, no borders,
 no dividers. Every change is saved at once.
 
-**Alerts.** The label, with an add icon button (plus) on its right. Under it, in `12px` secondary text: "Warn me when
-a reset is close and a lot is still unused." Then one row per rule, read as a sentence:
+**Alerts.** Under the label, a row of tabs says whose rules are on screen: "General", then one per account (the
+provider's name, with the login when a provider has more than one). Tabs are `12px/600` in secondary text; the
+selected one takes the hover fill.
 
-`dot 6px | Yellow ▾ | ≤ 2d ▾ to reset | ≥ 50% ▾ left`
+Each tab shows two groups, each under a `13px/600` title with an add icon button (plus) on its right and one
+sentence in `12px` secondary text:
 
-- The rows share one grid, so the words line up from rule to rule.
+- **Plan reset**: "Warn me when a plan reset is close and a lot is still unused. Each rule is a mark on the bar."
+  Times from 6h to 7d, shares from 10% to 90%.
+- **Rate limit reset**: "Warn me when a rate limit reset is about to expire unused." Times from 1d to 30d, shares
+  from 0% to 90%. Built in: yellow at ≤ 10d and red at ≤ 5d, with any share left.
+
+An account's group replaces the general one for that account. Until it has one it reads "Follows the general rules."
+with a "Customize" link that copies the general rules in; once it has one, a "Use the general rules" link removes it.
+The general groups end in "Restore defaults" instead. These links are tiny, in faint text (`11px`), and turn the text
+colour on hover.
+
+One row per rule, read as a sentence:
+
+`dot 6px | Yellow ▾ | ≤ 2d ▾ to reset | ≥ 50% ▾ left` (a reset rule says "to expire")
+
+- The rows of a group share one grid, so the words line up from rule to rule.
 - The three values are native selects drawn as words: no box, `13px/600`, a tiny caret, and the bar-track colour as
-  the fill when pointed at. The colour select and the dot take the rule's level colour.
+  the fill when pointed at. The colour select offers "No colour", "Yellow" and "Red"; it and the dot take the rule's
+  colour. A rule with no colour never alerts: it only marks the bar, as a spend to aim for.
 - The row takes the hover fill (`8px` radius, bleeding `8px` into the padding) when pointed at or focused within; only
   then the remove button (trash) shows, over the row's right end.
-- With no rule: "No alerts: nothing turns yellow or red." in faint text.
-- Under the rows, "Restore defaults": a tiny link in faint text (`11px`) that turns the text colour on hover.
+- With no rule: "No rules: nothing turns yellow or red." in faint text.
 
 **Status bar.** One line that is the switch itself (`<button role="switch">`): "Show in the status bar" in `600`,
 under it "The most pressing account, next to Orca's usage." in `12px` secondary text, and a `28 x 16px` switch on the

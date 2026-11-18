@@ -1,8 +1,8 @@
 // The states the panel has to draw, as a stand-in for the worker. `npm run preview` serves them
 // outside Orca, because Orca's own scenario tooling only covers components panels.
-import { DEFAULT_ALERT_RULES, parseAlertRules, type AlertRule } from '../../src/core/alerts'
+import { DEFAULT_ALERT_RULES, parseAlertRules, type AlertRules } from '../../src/core/alerts'
 import { buildReport, type UsageReport } from '../../src/core/report'
-import type { AccountUsage, UsageWindow } from '../../src/core/usage'
+import { accountKey, type AccountUsage, type UsageWindow } from '../../src/core/usage'
 import { DEFAULT_PREFERENCES, parsePreferences, type Preferences } from '../../src/preferences'
 
 const HOUR = 60 * 60 * 1000
@@ -74,9 +74,30 @@ const SCENARIOS: Record<string, AccountUsage[] | 'loading' | 'error'> = {
       detail: 'Sign in again to refresh this login. <b>not markup</b>',
     },
   ],
+  'own-rules': [
+    account('Codex', 'pro', [weekly(84, 6 * DAY + 3 * HOUR)], [4 * DAY + 9 * HOUR, 24 * DAY]),
+    account('Claude', 'max', [weekly(87, 6 * DAY + 7 * HOUR)]),
+    account('Grok', null, [weekly(89, 5 * DAY + 5 * HOUR)]),
+  ],
   'no-accounts': [],
   loading: 'loading',
   error: 'error',
+}
+
+/** Scenarios that start from rules of their own instead of the built-in ones. */
+const RULES: Record<string, AlertRules> = {
+  // Claude with rules of its own, one of them a mark that never alerts; Codex with a reset about to expire.
+  'own-rules': {
+    general: DEFAULT_ALERT_RULES.general,
+    accounts: {
+      [accountKey({ provider: 'Claude', account: 'person@example.com' })]: {
+        plan: [
+          { withinMs: 3 * DAY, minLeftPercent: 60, level: 'mark' },
+          { withinMs: DAY, minLeftPercent: 30, level: 'urgent' },
+        ],
+      },
+    },
+  },
 }
 
 export const scenarioNames = Object.keys(SCENARIOS)
@@ -85,7 +106,7 @@ export const scenarioNames = Object.keys(SCENARIOS)
 export function fakeWorker(name: string): (request: string, input?: unknown) => Promise<UsageReport | Preferences> {
   const scenario = SCENARIOS[name]
   if (scenario === undefined) throw new Error(`Unknown scenario "${name}". Known: ${scenarioNames.join(', ')}`)
-  let rules: AlertRule[] = DEFAULT_ALERT_RULES
+  let rules = RULES[name] ?? DEFAULT_ALERT_RULES
   let preferences = DEFAULT_PREFERENCES
   return async (request, input) => {
     if (scenario === 'loading') return new Promise(() => {})
