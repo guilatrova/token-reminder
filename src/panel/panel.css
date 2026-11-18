@@ -1035,13 +1035,6 @@ select {
 .tibo-menu-head {
   padding: 9px 8px 12px;
 }
-.tibo-menu-head strong,
-.tibo-menu-head small {
-  display: block;
-}
-.tibo-menu-head small {
-  color: var(--orca-muted-foreground);
-}
 .tibo-action,
 .tibo-help summary {
   cursor: pointer;
@@ -1122,7 +1115,6 @@ select {
   height: 14px;
 }
 .tibo-author small,
-.tibo-byline span:not(.icon),
 .tibo-coverage {
   color: var(--sub);
   font-size: 11px;

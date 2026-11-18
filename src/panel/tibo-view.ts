@@ -29,22 +29,13 @@ export function tiboMenu(active: boolean, setMode: (active: boolean) => void) {
     setMode(!active)
   }
   menu.append(
-    el(
-      'header',
-      'tibo-menu-head',
-      portrait(),
-      el('div', '', el('strong', '', 'Tibo Reset'), el('small', '', '@thsottiaux')),
-    ),
+    el('header', 'tibo-menu-head', portrait(), el('strong', '', 'Tibo Reset')),
     action,
     el(
       'details',
       'tibo-help',
       el('summary', '', icon('info'), "What's a Tibo Reset Mode?", icon('chevron')),
-      el(
-        'p',
-        '',
-        'An early Codex reset can wipe out unused weekly quota. Start to track all your Codex accounts with one Critical rule: ≥0% left within 7 days. Leave to restore your usual rules.',
-      ),
+      el('p', '', 'Track all your Codex accounts and spend your weekly quota ASAP!'),
     ),
   )
   return el('span', 'tibo-control', trigger, menu)
@@ -62,7 +53,7 @@ export function tiboPost(weekly: ReturnType<typeof weeklyUsage>, total: number) 
   const { percent, count } = weekly
   const complete = percent === 100 && count === total
   const milestone = percent === null ? null : Math.min(complete ? 4 : 3, Math.floor(percent / 25))
-  const name = el('div', 'tibo-byline', el('strong', '', 'Tibo'), icon('verified'), el('span', '', '@thsottiaux'))
+  const name = el('div', 'tibo-byline', el('strong', '', 'Tibo'), icon('verified'))
   const author = el(
     'header',
     'tibo-author',
