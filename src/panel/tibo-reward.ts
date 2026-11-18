@@ -49,9 +49,6 @@ function showResetTicket(elapsed: number, openExternal: ViewContext['openExterna
     ctx.stroke()
   }
   ctx.restore()
-  ctx.fillStyle = '#aaf1c9'
-  ctx.font = 'bold 24px monospace'
-  ctx.fillText('CODEX  /  TIBO RESET', 64, 85)
   ctx.fillStyle = '#f6f6df'
   ctx.font = '500 48px system-ui'
   ctx.fillText('Tibo, I burned all my tokens in under', 64, 222, 946)
