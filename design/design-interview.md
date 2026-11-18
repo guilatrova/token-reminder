@@ -71,3 +71,5 @@ Unprompted, on the panel running in Orca:
 - The bar: "Tá confuso o jeito que você construiu a barra... Quero ver ainda quanto já foi usado e os trackers mostram
   o que ainda falta nos pontos." The first bar filled with what was left. It now fills with what was used, the tick
   marks the time gone, and the hatch between them is what should have been spent by now.
+- "Essa barra pode ser mais slim, e no hover exibe o % e ela fica gorda." The bar is `4px` at rest; hovering
+  thickens it to `14px` and shows the share used. The used/left caption under the bar is gone.

@@ -58,7 +58,7 @@ One `<button aria-expanded>` per account, a grid of seven cells:
 - **Avatar**: the provider's own mark at `14px`, the same ones Orca's usage meter shows, on the quiet fill with a
   hairline border. A provider without a mark shows its first two letters, `10px/700`.
 - **Name and plan**: plan in secondary text, as the provider spells it.
-- **Bar** (`6px` high in the row): only while the account is closed. See "The pace bar".
+- **Bar**: only while the account is closed. See "The pace bar".
 - **Tanks**: one `9 x 12px` block per unused reset, coloured by that reset's own level; neutral (secondary text
   colour) when its level is `ok` or unknown.
 - **% left**: the number in the account's level colour, `650` weight, then "left" small in secondary text. **Time**
@@ -79,6 +79,9 @@ The bar is the window, read left to right as both the plan and the clock:
 - **Hatch**: where the tick is ahead of the fill, the stretch between them is striped at 45 degrees in the level
   colour at 60%. That is the plan that should have been spent by now, and is on course to go unused.
 - The empty track to the right of both is what is left.
+- **Slim at rest, fat on hover**: the bar is `4px` high. Hovering the row (or the bar in the detail) thickens it to
+  `14px` and shows the share used, in `10px/700`: inside the fill at its right end, in the page colour, or just
+  after the fill when the fill is under 15% wide. The bar keeps a `14px` box, so thickening moves nothing.
 - With an unknown reset time there is no tick and no hatch.
 - The fill grows from 0 in `0.7s`; the hatch fades in after it. No motion under `prefers-reduced-motion`.
 
@@ -87,7 +90,7 @@ The bar is the window, read left to right as both the plan and the clock:
 Opens under the row with a `0.25s` height transition. In order:
 
 1. The account (email), faint, when known.
-2. The pace bar again, `10px` high, with a caption beneath: "26% used" on the left, "74% left" on the right.
+2. The pace bar again, full width.
 3. A note, when the at-risk share rounds to 1% or more: "~62% about to go unused" in the level colour and `600` when
    the main window is alerting, otherwise "~14% may go unused" in secondary text.
 4. One line per deadline: a `6px` dot, a label, the date ("Tue, Nov 24"), and the time left in `600`. The dot and the
