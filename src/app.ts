@@ -1,5 +1,5 @@
 // What the worker does, given its usage sources: keep the last read, answer the panel from it,
-// re-read on a timer and keep the status bar item on the most pressing window. It never names a provider.
+// re-read on a timer and show the status bar item while something needs spending. It never names a provider.
 import type { OrcaWorkerApi } from 'orca/worker'
 import { DEFAULT_ALERT_RULES, parseAlertRules, type AlertRules } from './core/alerts'
 import { buildReport, type UsageReport } from './core/report'
@@ -50,7 +50,8 @@ export async function start(
   async function publish(report: UsageReport): Promise<UsageReport> {
     orca.panels.post('usage.changed', report)
     // Decided here, not when the read started: the person may have hidden the item while it ran.
-    const item = preferences.showStatusBar ? { visible: true, ...statusBarView(report) } : { visible: false }
+    const view = preferences.showStatusBar ? statusBarView(report) : null
+    const item = view ? { visible: true, ...view } : { visible: false }
     await orca.host.call('statusBar.update', { id: STATUS_BAR_ITEM, ...item })
     return report
   }

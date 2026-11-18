@@ -1,48 +1,34 @@
-// What the status bar item says about a report: the most pressing window as its text, and
-// every deadline of every account in the tooltip.
+// What the status bar item says about a report. It speaks only when something needs spending:
+// the most pressing account as its text, and every account that needs spending in the tooltip.
 import { formatDuration } from './core/alerts'
-import { headline, type AccountReport, type UsageReport, type WindowReport } from './core/report'
-import { leftPercent } from './core/usage'
-import { LEVEL_LABEL, LEVEL_TONE, WINDOW_LABEL } from './tones'
+import { spendCalls, type SpendCall, type UsageReport } from './core/report'
+import { LEVEL_TONE } from './tones'
 
-export type StatusBarView = { text: string; tone: 'neutral' | 'warning' | 'danger'; tooltip: string }
+export type StatusBarView = { text: string; tone: 'warning' | 'danger'; tooltip: string }
 
-/** "6d 4h (Nov 24)": how long until a deadline, and its day. */
-function deadlineText(at: number | null, now: number): string {
-  if (at === null) return 'unknown'
-  const day = new Date(at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-  return `${formatDuration(at - now)} (${day})`
+/** "Grok: spend 74%", or "Codex: use a reset" when a rate limit reset is what is about to be lost. */
+function ask(call: SpendCall): string {
+  const what = call.deadline === 'window' ? `spend ${Math.round(call.leftPercent)}%` : 'use a reset'
+  return `${call.provider}: ${what}`
 }
 
-function windowText(window: WindowReport, now: number): string {
-  const urgency = window.alert && window.alert.level !== 'ok' ? `, ${LEVEL_LABEL[window.alert.level]}` : ''
-  const left = Math.round(leftPercent(window))
-  return `${WINDOW_LABEL[window.kind]} ${left}% left, ${deadlineText(window.resetsAt, now)}${urgency}`
+/** "Grok: spend 74% by Thu, Nov 19 (20h)". */
+function sentence(call: SpendCall, now: number): string {
+  const day = new Date(call.by).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
+  return `${ask(call)} by ${day} (${formatDuration(call.by - now)})`
 }
 
-/** Orca draws a tooltip as one flowing paragraph, so each account is a single sentence. */
-function accountText(account: AccountReport, now: number): string {
-  if (account.status === 'unavailable') return `${account.provider}: unavailable. ${account.detail}`
-  const resets = account.resets.map((reset) => {
-    const urgency = reset.alert && reset.alert.level !== 'ok' ? ', expiring unused' : ''
-    return `Reset ${deadlineText(reset.expiresAt, now)}${urgency}`
-  })
-  const parts = [...account.windows.map((window) => windowText(window, now)), ...resets]
-  return `${[account.provider, account.plan].filter(Boolean).join(' ')}: ${parts.join(' · ')}`
-}
-
-export function statusBarView(report: UsageReport): StatusBarView {
+/** Null when every account is on track: the item then has nothing to say and stays out of the way. */
+export function statusBarView(report: UsageReport): StatusBarView | null {
   const now = report.readAt
-  const tooltip = report.accounts.map((account) => accountText(account, now)).join(' | ')
-  const top = headline(report)
-  if (!top) {
-    const text = report.accounts.length === 0 ? 'No accounts' : 'Usage unavailable'
-    return { text, tone: 'neutral', tooltip: tooltip || 'No account managed by Orca was found.' }
+  const calls = spendCalls(report)
+  const [top, ...others] = calls
+  if (!top) return null
+  const more = others.length ? ` · +${others.length}` : ''
+  return {
+    text: `${ask(top)} in ${formatDuration(top.by - now)}${more}`,
+    tone: LEVEL_TONE[top.level],
+    // Orca draws a tooltip as one flowing paragraph, so the accounts are set apart by a dot, not a line break.
+    tooltip: calls.map((call) => sentence(call, now)).join('  ·  '),
   }
-  const text =
-    top.expiringReset === null
-      ? `${top.provider} ${Math.round(top.leftPercent)}% left · ${formatDuration(top.resetsAt - now)}`
-      : `${top.provider} reset expires · ${formatDuration(top.expiringReset - now)}`
-  // On track stays neutral so the item blends in until something needs spending.
-  return { text, tone: top.level === 'ok' ? 'neutral' : LEVEL_TONE[top.level], tooltip }
 }

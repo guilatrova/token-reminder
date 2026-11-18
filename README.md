@@ -9,8 +9,8 @@ and much of what you paid for is still there.
 ## What it does today
 
 - Reads your Claude, Codex and Grok plans from the logins already on this machine.
-- **Status bar:** the most pressing plan window, with the share left and the time to its reset. Pressing it toggles
-  the right sidebar, where the panel lives.
+- **Status bar:** shows only while something needs spending: the most pressing account, what to spend and by when.
+  Pressing it toggles the right sidebar, where the panel lives.
 - **Panel:** for each account, every plan window and every rate-limit reset you can still redeem, with the date it
   ends and the time left.
 - Turns yellow or red from your alert rules. Weekly resets (built in: reset within 2d with 50% left, 1d with 70%, 10h

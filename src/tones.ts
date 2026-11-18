@@ -7,8 +7,6 @@ export const LEVEL_TONE = { ok: 'success', warning: 'warning', urgent: 'danger' 
   string
 >
 
-export const LEVEL_LABEL: Record<AlertLevel, string> = { ok: 'On track', warning: 'Spend soon', urgent: 'Spend now' }
-
 export const WINDOW_LABEL: Record<WindowKind, string> = { session: 'Session', weekly: 'Weekly', monthly: 'Monthly' }
 
 /** How a rule's level is named where rules are edited and where they are drawn. */

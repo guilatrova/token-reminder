@@ -210,8 +210,8 @@ function generalSection(preferences: Preferences, onSave: (preferences: Preferen
     'setting',
     hinted(
       'span',
-      el('span', 'setting-title', 'Show in the status bar'),
-      "The most pressing account, next to Orca's usage.",
+      el('span', 'setting-title', 'Alert in the status bar'),
+      "Shows next to Orca's usage only while a plan or a reset needs spending.",
     ),
     el('i', 'switch'),
   )

@@ -152,42 +152,37 @@ export function buildReport(accounts: AccountUsage[], rules: AlertRules, now: nu
   return { accounts: reported.sort((a, b) => sortRank(a) - sortRank(b)), rules, readAt: now }
 }
 
-export type Headline = {
+/** One account that needs spending now: what is about to be lost, and by when. */
+export type SpendCall = {
   provider: string
+  level: Exclude<AlertLevel, 'ok'>
+  /** What the deadline is: the plan window resetting, or a rate limit reset expiring unredeemed. */
+  deadline: 'window' | 'reset'
+  /** How much of the plan is still there to spend. */
   leftPercent: number
-  level: AlertLevel
-  resetsAt: number
-  /** Epoch ms of the soonest reset behind the account's level, when a reset and not the plan window is behind it. */
-  expiringReset: number | null
+  /** Epoch ms of the deadline. */
+  by: number
 }
 
-/** The reset that explains an account's level, when its main window alone does not. */
-function expiringReset(account: OkAccountReport, main: WindowReport): number | null {
-  if (account.level === 'ok' || main.alert?.level === account.level) return null
-  const expiries = account.resets.flatMap((reset) =>
-    reset.alert?.level === account.level && reset.expiresAt !== null ? [reset.expiresAt] : [],
-  )
-  return expiries.length ? Math.min(...expiries) : null
-}
-
-/** The most pressing account by its main window: worst level first, then the soonest reset. */
-export function headline(report: UsageReport): Headline | null {
-  let best: Headline | null = null
-  for (const account of report.accounts) {
-    const main = account.status === 'ok' ? account.windows[0] : undefined
-    if (account.status !== 'ok' || !main || main.resetsAt === null) continue
-    const candidate = {
-      provider: account.provider,
-      leftPercent: leftPercent(main),
-      level: account.level,
-      resetsAt: main.resetsAt,
-      expiringReset: expiringReset(account, main),
-    }
-    const beats =
-      !best ||
-      ORDER[candidate.level] < ORDER[best.level] ||
-      (candidate.level === best.level && candidate.resetsAt < best.resetsAt)
-    if (beats) best = candidate
+function spendCall(account: AccountReport): SpendCall | null {
+  if (account.status !== 'ok' || account.level === 'ok') return null
+  const main = account.windows[0]
+  if (!main) return null
+  const { provider, level } = account
+  const window = account.windows.find((judged) => judged.alert?.level === level && judged.resetsAt !== null)
+  if (window?.resetsAt != null) {
+    return { provider, level, deadline: 'window', leftPercent: leftPercent(window), by: window.resetsAt }
   }
-  return best
+  const expiries = account.resets.flatMap((reset) =>
+    reset.alert?.level === level && reset.expiresAt !== null ? [reset.expiresAt] : [],
+  )
+  if (expiries.length === 0) return null
+  return { provider, level, deadline: 'reset', leftPercent: leftPercent(main), by: Math.min(...expiries) }
+}
+
+/** Every account that needs spending, most pressing first: worst level, then the soonest deadline. */
+export function spendCalls(report: UsageReport): SpendCall[] {
+  return report.accounts
+    .flatMap((account) => spendCall(account) ?? [])
+    .sort((a, b) => ORDER[a.level] - ORDER[b.level] || a.by - b.by)
 }

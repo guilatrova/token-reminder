@@ -1,6 +1,6 @@
 import { assert, test } from 'orca/testing'
 import { DEFAULT_ALERT_RULES, evaluateAlert, parseAlertRules, withRuleList, type AlertRule } from '../src/core/alerts'
-import { buildReport, headline } from '../src/core/report'
+import { buildReport, spendCalls } from '../src/core/report'
 import { accountKey, type AccountUsage, type UsageWindow } from '../src/core/usage'
 
 const HOUR = 60 * 60 * 1000
@@ -35,7 +35,7 @@ test('a session window and an unknown reset are not judged', () => {
   assert.equal(evaluateAlert({ ...weekly(99, 1), resetsAt: null }, RULES, NOW), null)
 })
 
-test('the report puts the most pressing account first and headlines it', () => {
+test('the report puts the most pressing account first and calls for spending only where it is needed', () => {
   const account = (provider: string, window: UsageWindow): AccountUsage => ({
     provider,
     status: 'ok',
@@ -54,17 +54,14 @@ test('the report puts the most pressing account first and headlines it', () => {
     report.accounts.map((entry) => entry.provider),
     ['Now', 'Soon', 'Calm', 'Down'],
   )
-  assert.deepEqual(headline(report), {
-    provider: 'Now',
-    leftPercent: 80,
-    level: 'urgent',
-    resetsAt: NOW + 12 * HOUR,
-    expiringReset: null,
-  })
-  assert.equal(headline(buildReport([down], DEFAULT_ALERT_RULES, NOW)), null)
+  assert.deepEqual(spendCalls(report), [
+    { provider: 'Now', level: 'urgent', deadline: 'window', leftPercent: 80, by: NOW + 12 * HOUR },
+    { provider: 'Soon', level: 'warning', deadline: 'window', leftPercent: 60, by: NOW + 40 * HOUR },
+  ])
+  assert.deepEqual(spendCalls(buildReport([down, account('Calm', weekly(90, 150))], DEFAULT_ALERT_RULES, NOW)), [])
 })
 
-test('a reset is judged by the reset rules, colours the account and becomes the headline', () => {
+test('a reset is judged by the reset rules, colours the account and is what it calls for', () => {
   const usage: AccountUsage = {
     provider: 'Alpha',
     status: 'ok',
@@ -89,7 +86,9 @@ test('a reset is judged by the reset rules, colours the account and becomes the 
     ['urgent', 'ok', undefined],
   )
   assert.equal(account.level, 'urgent')
-  assert.equal(headline(report)?.expiringReset, NOW + 30 * HOUR)
+  assert.deepEqual(spendCalls(report), [
+    { provider: 'Alpha', level: 'urgent', deadline: 'reset', leftPercent: 60, by: NOW + 30 * HOUR },
+  ])
   assert.deepEqual(
     account.advice && [account.advice.leftPercent, Math.round(account.advice.perDayPercent ?? -1)],
     [60, 15],

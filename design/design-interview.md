@@ -124,3 +124,6 @@ Seven notes on the settings running in Orca, all applied:
 - On Claude's limit resets, which Anthropic only serves to its own clients: "só deixa documentado no codigo, se no
   futuro liberar, vamos implementar. Adicionar um button dentro do claude (ao expandir) pra abrir o usage no site."
   The Claude adapter documents the finding, and its detail has a button to claude.ai/settings/usage.
+- On the status bar item: "tá medonho de feio. Tem como auto ocultar se tudo estiver healthy? ... pode só exibir se
+  tiver alerta, tipo, Grok spend X until Y (new line) claude spend Z until A." The item shows only while something
+  needs spending and says what to spend by when; the tooltip lists every such account (Orca allows no line breaks).

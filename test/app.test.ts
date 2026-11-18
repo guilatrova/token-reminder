@@ -47,25 +47,29 @@ async function request(worker: Awaited<ReturnType<typeof mountWorker>>, name: 'u
 const lastStatusBar = (worker: Awaited<ReturnType<typeof mountWorker>>) =>
   worker.host.callsOf('statusBar.update').at(-1)
 
-test('answers the panel, posts the report and puts the most pressing window in the status bar', async () => {
+test('answers the panel, posts the report and puts what needs spending in the status bar', async () => {
   const worker = await mountWorker(
-    workerWith({ Alpha: memoryUsage([reading(90, 150, 2)]), Beta: memoryUsage([reading(80, 12)]) }),
+    workerWith({
+      Alpha: memoryUsage([reading(90, 150, 2)]),
+      Beta: memoryUsage([reading(80, 12)]),
+      Gamma: memoryUsage([reading(60, 40)]),
+    }),
   )
   const report = await worker.request('usage.read')
   // Orca refuses an answer that is not plain JSON, such as one with an undefined field.
   assert.deepEqual(JSON.parse(JSON.stringify(report)), report)
   assert.deepEqual(worker.posts.at(-1), { event: 'usage.changed', payload: report })
   const shown = lastStatusBar(worker) as { text: string; tone: string; tooltip: string }
-  assert.deepEqual([shown.text, shown.tone], ['Beta 80% left · 12h', 'danger'])
+  assert.deepEqual([shown.text, shown.tone], ['Beta: spend 80% in 12h · +1', 'danger'])
   assert.match(
     shown.tooltip,
-    /^Beta pro: Weekly 80% left, 12h \(\w+ \d+\), Spend now \| Alpha pro: Weekly 90% left, 6d 6h \(\w+ \d+\) · Reset 12d 12h \(\w+ \d+\) · Reset unknown$/,
+    /^Beta: spend 80% by \w+, \w+ \d+ \(12h\)  ·  Gamma: spend 60% by \w+, \w+ \d+ \(1d 16h\)$/,
   )
   assert.deepEqual(worker.refusals, [])
   await worker.deactivate()
 })
 
-test('stays neutral when on track, and one failing provider does not hide another', async () => {
+test('stays out of the status bar when on track, and one failing provider does not hide another', async () => {
   const broken: UsageSource = { read: () => Promise.reject(new Error('disk on fire')) }
   const worker = await mountWorker(workerWith({ Alpha: memoryUsage([reading(90, 150)]), Beta: broken }))
   const report = await worker.request('usage.read')
@@ -76,29 +80,14 @@ test('stays neutral when on track, and one failing provider does not hide anothe
       ['Beta', 'unavailable'],
     ],
   )
-  const shown = lastStatusBar(worker) as { text: string; tone: string; tooltip: string }
-  assert.deepEqual([shown.text, shown.tone], ['Alpha 90% left · 6d 6h', 'neutral'])
-  assert.match(shown.tooltip, /Beta: unavailable\. disk on fire/)
-  await worker.deactivate()
-})
-
-test('says so when Orca manages no account', async () => {
-  const worker = await mountWorker(workerWith({ Alpha: memoryUsage([]) }))
-  await worker.request('usage.read')
-  assert.deepEqual(lastStatusBar(worker), {
-    id: 'unused-plan',
-    visible: true,
-    text: 'No accounts',
-    tone: 'neutral',
-    tooltip: 'No account managed by Orca was found.',
-  })
+  assert.deepEqual(lastStatusBar(worker), { id: 'unused-plan', visible: false })
   await worker.deactivate()
 })
 
 test('saved rules replace the built-in ones and survive a restart', async () => {
   const sources = { Alpha: memoryUsage([reading(30, 100)]) }
   const worker = await mountWorker(workerWith(sources))
-  assert.equal((lastStatusBar(await request(worker, 'usage.read')) as { tone: string }).tone, 'neutral')
+  assert.deepEqual(lastStatusBar(await request(worker, 'usage.read')), { id: 'unused-plan', visible: false })
   const strict = { withinMs: 120 * HOUR, minLeftPercent: 20, level: 'urgent' as const }
   const rules = withRuleList(DEFAULT_ALERT_RULES, null, 'plan', [strict])
   const report = await worker.request('rules.save', { rules })
@@ -151,9 +140,10 @@ test('a read that is getting old is shown while a new one runs; a very old one i
 })
 
 test('the status bar item can be hidden, stays hidden across a restart and comes back', async () => {
-  const alpha = counted([reading(90, 150)])
+  const alpha = counted([reading(80, 12)])
   const worker = await mountWorker(workerWith({ Alpha: alpha }))
   await worker.request('usage.read')
+  assert.equal((lastStatusBar(worker) as { visible: boolean }).visible, true)
   assert.deepEqual(await worker.request('preferences.read'), { showStatusBar: true })
   await worker.request('preferences.save', { showStatusBar: false })
   assert.deepEqual(lastStatusBar(worker), { id: 'unused-plan', visible: false })
@@ -172,7 +162,7 @@ test('the status bar item can be hidden, stays hidden across a restart and comes
   await restarted.request('preferences.save', { showStatusBar: true })
   await settled()
   const shown = lastStatusBar(restarted) as { visible: boolean; text: string }
-  assert.deepEqual([shown.visible, shown.text], [true, 'Alpha 90% left · 6d 6h'])
+  assert.deepEqual([shown.visible, shown.text], [true, 'Alpha: spend 80% in 12h'])
   await restarted.deactivate()
 })
 
@@ -182,6 +172,6 @@ test('a reset about to expire is what the status bar says', async () => {
   const worker = await mountWorker(workerWith({ Alpha: memoryUsage([expiring]) }))
   await worker.request('usage.read')
   const shown = lastStatusBar(worker) as { text: string; tone: string }
-  assert.deepEqual([shown.text, shown.tone], ['Alpha reset expires · 4d 4h', 'danger'])
+  assert.deepEqual([shown.text, shown.tone], ['Alpha: use a reset in 4d 4h', 'danger'])
   await worker.deactivate()
 })

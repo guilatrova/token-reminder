@@ -11,8 +11,11 @@ Decided in [design-interview.md](design-interview.md). This file is the specific
 
 ## Surfaces
 
-- **Status bar item** (`gauge` icon): the most pressing account, "Codex 85% left · 6d 4h", neutral, yellow or red.
-  When a rate limit reset, not the plan window, is what alerts, it reads "Codex reset expires · 4d 9h".
+- **Status bar item** (`gauge` icon): it shows only while something needs spending, and stays out of the status bar
+  when every account is on track. Its text is the most pressing account, yellow or red: "Grok: spend 74% in 20h", or
+  "Codex: use a reset in 4d 9h" when a rate limit reset is what is about to be lost, with " · +1" when more accounts
+  need spending. Its tooltip lists every one of them with the day: "Grok: spend 74% by Thu, Nov 19 (20h) · Claude:
+  spend 58% by Fri, Nov 20 (1d 14h)". Orca draws a tooltip as one paragraph, so there are no line breaks.
 - **Panel** (`gauge` icon, right sidebar): an HTML page, because Orca's declarative components cannot colour a bar or
   draw the gauge. Orca's icon list has no token or coin, so `gauge` stands for the fuel-gauge idea.
 
@@ -150,8 +153,8 @@ Explanations are tooltips, not text on the page: a label that has one is followe
 text, and pointing at either opens the explanation under the label (popover colours, hairline border, `11px`, up to
 `250px` wide).
 
-**General.** First, because it never changes. One line that is the switch itself (`<button role="switch">`): "Show in
-the status bar" in `600`, with the tooltip "The most pressing account, next to Orca's usage.", and a `28 x 16px`
+**General.** First, because it never changes. One line that is the switch itself (`<button role="switch">`): "Alert in
+the status bar" in `600`, with the tooltip "Shows next to Orca's usage only while a plan or a reset needs spending.", and a `28 x 16px`
 switch on the right, `ok` green when on. The line takes the hover fill. On by default. When off, the item leaves
 Orca's status bar and the worker stops its 10-minute reads; the panel still reads when it opens.
 
