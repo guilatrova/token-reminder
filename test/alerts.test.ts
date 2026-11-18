@@ -148,9 +148,9 @@ test('plan rules ahead of the usage are marks on the main window, and a rule wit
   assert.ok(account?.status === 'ok')
   assert.equal(account.level, 'ok')
   assert.deepEqual(
-    account.windows[0]?.marks.map((mark) => [mark.usedPercent, mark.rule.level]),
+    account.windows[0]?.marks.map((mark) => [mark.usedPercent, mark.aheadPercent, mark.rule.level]),
     // The place at 10% used is behind the 40% already used, so its mark is gone.
-    [[60, 'warning']],
+    [[60, 20, 'warning']],
   )
 })
 

@@ -26,7 +26,12 @@ export type WindowReport = UsageWindow & {
 }
 
 /** A plan rule drawn on the bar: the share used at which the rule stops matching. */
-export type RuleMark = { usedPercent: number; rule: AlertRule }
+export type RuleMark = {
+  usedPercent: number
+  /** How much more of the plan must be used to get there. */
+  aheadPercent: number
+  rule: AlertRule
+}
 
 /** One reset the account can still redeem. Judged like a window: its expiry against the plan left. */
 export type ResetReport = { expiresAt: number | null; alert: Alert | null }
@@ -84,7 +89,7 @@ function ruleMarks(rules: AlertRule[], usedPercent: number): RuleMark[] {
     if (!shown || isWorseRule(rule.level, shown.level)) byPlace.set(place, rule)
   }
   return [...byPlace]
-    .map(([usedPercent, rule]) => ({ usedPercent, rule }))
+    .map(([place, rule]) => ({ usedPercent: place, aheadPercent: place - usedPercent, rule }))
     .sort((a, b) => a.usedPercent - b.usedPercent)
 }
 

@@ -270,6 +270,25 @@ select {
   inset: 0 auto 0 50%;
   border-left: 2px dashed var(--c);
   transform: translateX(-50%);
+  transition: border-left-width 0.15s ease;
+}
+.rule-mark:hover::before {
+  border-left-width: 4px;
+}
+.rule-mark:hover + .mark-tip {
+  opacity: 1;
+}
+/* Two lines: how far the usage is from the mark, then the rule it stands for. */
+.mark-tip {
+  display: grid;
+  justify-items: start;
+}
+.mark-tip b {
+  font-weight: 600;
+}
+.mark-tip span {
+  font-weight: 400;
+  color: var(--orca-muted-foreground);
 }
 .tip {
   position: absolute;
@@ -303,9 +322,13 @@ select {
 .row:focus-visible .tick {
   height: 18px;
 }
-.pace:hover .tip,
-.row:focus-visible .tip {
+.pace:hover .used-tip,
+.row:focus-visible .used-tip {
   opacity: 1;
+}
+/* One tooltip at a time: a mark that is pointed at speaks instead of the bar. */
+.pace:has(.rule-mark:hover) .used-tip {
+  opacity: 0;
 }
 .pace.grow .fill {
   width: 0;

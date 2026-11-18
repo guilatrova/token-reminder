@@ -104,3 +104,5 @@ Unprompted, then four decisions answered in a plan (all as proposed):
   (reset: yellow at ≤ 10d, red at ≤ 5d). Reset rules draw no marks. The status bar names the reset when it alerts.
 - "Quando a barra já ultrapassou um 'rate limit' antigo, aquela barra tracejada pode desaparecer." A mark the fill
   has passed is no longer drawn.
+- "passar o mouse em cima da barra tracejada visivel, aumenta/engorda ela e exibe a marcacao no tooltip (quantos %
+  praquele limite)." A mark thickens on hover and its tooltip says how far the usage is from it, then the rule.
