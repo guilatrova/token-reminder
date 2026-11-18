@@ -693,7 +693,8 @@ select {
 /* One alert rule, read as a sentence: colour, "≤ 2d to reset", "≥ 50% left". One grid, so the words line up. */
 .rules {
   display: grid;
-  grid-template-columns: auto auto 1fr;
+  /* colour | time | share | remove, then the rest of the row stays empty */
+  grid-template-columns: auto auto auto auto 1fr;
   column-gap: 6px;
 }
 .rule {
@@ -746,13 +747,10 @@ select {
 .chip.level {
   color: var(--c);
 }
-/* Over the end of the row, so a narrow panel does not need a column for it. */
+/* Right after the sentence it removes, not at the far edge of the panel. */
 .rule .icon-btn {
-  position: absolute;
-  top: 50%;
-  right: 4px;
-  transform: translateY(-50%);
-  background: var(--orca-accent);
+  width: 20px;
+  height: 20px;
   opacity: 0;
 }
 .rule:hover .icon-btn,
@@ -762,15 +760,30 @@ select {
 .rule .icon-btn:hover {
   color: var(--urgent);
 }
+/* What can be done to a group, under its rules and in line with them: add first, the rare ones after. */
+.group-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 14px;
+  margin: 4px 0 0 16px;
+}
 .text-link {
   all: unset;
-  display: block;
-  width: fit-content;
-  /* On the right, under the add button: both act on the whole group. */
-  margin: 8px 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   font-size: 11px;
   color: var(--faint);
   cursor: pointer;
+}
+.text-link.primary {
+  font-weight: 600;
+  color: var(--orca-muted-foreground);
+}
+.text-link .icon {
+  width: 10px;
+  height: 10px;
 }
 .text-link:hover {
   color: var(--orca-foreground);

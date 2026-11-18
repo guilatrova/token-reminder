@@ -162,7 +162,7 @@ Orca's status bar and the worker stops its 10-minute reads; the panel still read
 provider's mark at `14px` before its name (and the login when a provider has more than one). Tabs are `12px/600` in
 secondary text; the selected one takes the hover fill. Changing tabs fades only the rules under them.
 
-Each tab shows two groups, each under a `13px/600` title with its tooltip and an add icon button (plus) on the right:
+Each tab shows two groups, each under a `13px/600` title with its tooltip:
 
 - **Weekly reset**: "Warn me when a weekly reset is close and a lot is still unused. Each rule is a mark on the bar."
   Times from 6h to 7d, shares from 10% to 90%.
@@ -170,9 +170,11 @@ Each tab shows two groups, each under a `13px/600` title with its tooltip and an
   from 0% to 90%. Built in: yellow at ≤ 10d and red at ≤ 5d, with any share left.
 
 An account's group replaces the general one for that account. Until it has one it reads "Follows the general rules."
-with a "Customize" link that copies the general rules in; once it has one, a "Use the general rules" link removes it.
-The general groups end in "Restore defaults" instead. These links are tiny, in faint text (`11px`), sit on the right
-under the group, and turn the text colour on hover.
+
+What can be done to a group sits in one line under its rules, at their indent, near what it changes and not at the
+panel's far edge: "+ Add rule" first (`11px/600`, secondary text), where the new rule will appear, then the rare one
+in faint text: "Restore defaults" on the general tab, "Use the general rules" on an account's own group. A group that
+follows general has "Customize" there instead, which copies the general rules in. All turn the text colour on hover.
 
 One row per rule, read as a sentence:
 
@@ -184,5 +186,5 @@ One row per rule, read as a sentence:
   the fill when pointed at. The colour select offers "No colour", "Yellow" and "Red"; it takes the rule's colour,
   which is the only colour on the row. A rule with no colour never alerts: it only marks the bar, as a spend to aim for.
 - The row takes the hover fill (`8px` radius, bleeding `8px` into the padding) when pointed at or focused within; only
-  then the remove button (trash) shows, over the row's right end.
+  then the remove button (trash) shows, in a column of its own right after "left".
 - With no rule: "No rules: nothing turns yellow or red." in faint text.

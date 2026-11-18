@@ -15,7 +15,7 @@ import type { AccountReport, UsageReport } from '../core/report'
 import type { Preferences } from '../preferences'
 import { RULE_KIND_LABEL, RULE_LEVEL_LABEL } from '../tones'
 import { avatar } from './avatar'
-import { el, hinted, iconButton } from './dom'
+import { el, hinted, icon, iconButton } from './dom'
 
 const HOUR = 60 * 60 * 1000
 const DAY = 24 * HOUR
@@ -115,8 +115,8 @@ function ruleRow(
   )
 }
 
-function textLink(label: string, focusKey: string, onClick: () => void): HTMLButtonElement {
-  const link = el('button', 'text-link', label)
+function textLink(label: string, focusKey: string, onClick: () => void, primary = false): HTMLButtonElement {
+  const link = el('button', primary ? 'text-link primary' : 'text-link', label)
   link.type = 'button'
   link.dataset.focus = focusKey
   link.addEventListener('click', onClick)
@@ -140,24 +140,31 @@ function ruleGroup(
       'rule-group',
       el('div', 'section-head', title),
       el('p', 'section-hint', 'Follows the general rules.'),
-      textLink('Customize', `${kind}-customize`, () => save(general)),
+      el(
+        'div',
+        'group-actions',
+        textLink('Customize', `${kind}-customize`, () => save(general), true),
+      ),
     )
   }
+  // Where a new rule will appear, so the button sits where its result does.
+  const add = textLink('Add rule', `${kind}-add`, () => save([...own, KINDS[kind].added]), true)
+  add.prepend(icon('plus'))
   return el(
     'section',
     'rule-group',
-    el(
-      'div',
-      'section-head',
-      title,
-      iconButton('Add rule', 'plus', `${kind}-add`, () => save([...own, KINDS[kind].added])),
-    ),
+    el('div', 'section-head', title),
     own.length === 0
       ? el('p', 'section-hint faint', 'No rules: nothing turns yellow or red.')
       : el('div', 'rules', ...own.map((rule, index) => ruleRow(kind, own, rule, index, save))),
-    scope === null
-      ? textLink('Restore defaults', `${kind}-defaults`, () => save(DEFAULT_ALERT_RULES.general[kind]))
-      : textLink('Use the general rules', `${kind}-follow`, () => save(null)),
+    el(
+      'div',
+      'group-actions',
+      add,
+      scope === null
+        ? textLink('Restore defaults', `${kind}-defaults`, () => save(DEFAULT_ALERT_RULES.general[kind]))
+        : textLink('Use the general rules', `${kind}-follow`, () => save(null)),
+    ),
   )
 }
 

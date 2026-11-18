@@ -127,3 +127,5 @@ Seven notes on the settings running in Orca, all applied:
 - On the status bar item: "tá medonho de feio. Tem como auto ocultar se tudo estiver healthy? ... pode só exibir se
   tiver alerta, tipo, Grok spend X until Y (new line) claude spend Z until A." The item shows only while something
   needs spending and says what to spend by when; the tooltip lists every such account (Orca allows no line breaks).
+- "Será que esses botões ficam realmente melhor na direita? ... ou mais perto do item e nao no fim?" then "Faz isso":
+  the remove button follows the rule's sentence, and add and restore sit under the rules at their indent.
