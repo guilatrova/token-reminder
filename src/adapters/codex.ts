@@ -1,6 +1,7 @@
 // Codex (ChatGPT plans). Reads the logins the Codex CLI saved on this machine and asks the
 // ChatGPT backend how much of each plan is used. It only reads: it never refreshes a token,
 // writes a login file or redeems a reset.
+import { countMissionTokens } from './codex-mission-tokens'
 import type { AccountReading, ResetCredits, UsageSource, UsageWindow, WindowKind } from '../core/usage'
 import { finite, getJson as getJsonFrom, isRecord, UsageRequestFailed } from './http'
 
@@ -72,7 +73,9 @@ function availableExpiries(payload: unknown): number[] {
     .sort((a, b) => a - b)
 }
 
-export function codexUsage(config: CodexConfig): UsageSource {
+export function codexUsage(
+  config: CodexConfig,
+): UsageSource & { missionTokens: (start: number, end: number) => Promise<number | null> } {
   function getJson(url: string, login: Login): Promise<unknown> {
     const headers: Record<string, string> = {
       Authorization: `Bearer ${login.accessToken}`,
@@ -125,5 +128,12 @@ export function codexUsage(config: CodexConfig): UsageSource {
     return [...byAccount.values()].reverse()
   }
 
-  return { read: async () => Promise.all((await readLogins()).map(readAccount)) }
+  return {
+    read: async () => Promise.all((await readLogins()).map(readAccount)),
+    async missionTokens(start, end) {
+      const logins = await readLogins()
+      if (!logins.length || logins.some((login) => !login.accountId)) return null
+      return countMissionTokens(config.homes, new Set(logins.flatMap((login) => login.accountId ?? [])), start, end)
+    },
+  }
 }

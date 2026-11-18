@@ -175,3 +175,38 @@ test('a reset about to expire is what the status bar says', async () => {
   assert.deepEqual([shown.text, shown.tone], ['Alpha: use a reset in 4d 4h', 'danger'])
   await worker.deactivate()
 })
+
+test('Tibo keeps its clock and earned reward across restarts until the person leaves', async () => {
+  let now = 10000
+  let remaining = 0
+  const sources = { Codex: { read: async () => [reading(remaining, 48)] } }
+  const worker = await mountWorker(workerWith(sources, () => now))
+  await worker.request('usage.read')
+  remaining = 35
+  const active = await worker.request('tibo.set', { active: true })
+  assert.deepEqual(active.tiboReset, { startedAt: 10000, finishedAt: null })
+  await worker.deactivate()
+  now += 12000
+  const reopened = await mountWorker(
+    workerWith(sources, () => now),
+    { host: worker.host },
+  )
+  assert.deepEqual((await reopened.request('tibo.set', { active: true })).tiboReset, active.tiboReset)
+  remaining = 0
+  const finished = (await reopened.request('usage.read')).tiboReset
+  assert.deepEqual(finished, { startedAt: 10000, finishedAt: 22000, stats: { accounts: 1, localTokens: null } })
+  await reopened.deactivate()
+  remaining = 100
+  now += 5000
+  const restarted = await mountWorker(
+    workerWith(sources, () => now),
+    { host: reopened.host },
+  )
+  assert.deepEqual((await restarted.request('usage.read')).tiboReset, finished)
+  await restarted.request('tibo.set', { active: false })
+  assert.deepEqual((await restarted.request('tibo.set', { active: true })).tiboReset, {
+    startedAt: now,
+    finishedAt: null,
+  })
+  await restarted.deactivate()
+})

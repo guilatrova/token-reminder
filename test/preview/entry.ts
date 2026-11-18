@@ -1,15 +1,55 @@
 // The preview page's script: stands in for Orca, then runs the real panel.
+import type { UsageReport } from '../../src/core/report'
 import { fakeWorker } from './scenarios'
 
 const params = new URLSearchParams(location.search)
 document.documentElement.className = params.get('theme') ?? 'dark'
 const nothing = () => ({ dispose() {} })
+const controls = document.querySelector('#milestones')
+const milestones = [0, 25, 50, 75, 100]
+const storedPercent = controls ? localStorage.getItem('tibo-preview-percent') : null
+let percent = storedPercent !== null && milestones.includes(Number(storedPercent)) ? Number(storedPercent) : 75
+const request = fakeWorker(params.get('scenario') ?? 'today', controls ? () => percent : undefined)
+const events = new EventTarget()
+if (controls) {
+  for (const milestone of milestones) {
+    const button = document.createElement('button')
+    button.className = 'btn'
+    button.textContent = milestone + '%'
+    button.setAttribute('aria-pressed', String(milestone === percent))
+    button.onclick = async () => {
+      percent = milestone
+      localStorage.setItem('tibo-preview-percent', String(percent))
+      controls
+        .querySelectorAll('button')
+        .forEach((other) => other.setAttribute('aria-pressed', String(other === button)))
+      const report = await request('usage.latest')
+      events.dispatchEvent(new CustomEvent('usage.changed', { detail: report }))
+    }
+    controls.append(button)
+  }
+}
 Object.assign(window, {
   orca: {
     locale: 'en-US',
-    plugin: { request: fakeWorker(params.get('scenario') ?? 'today'), on: nothing },
+    plugin: {
+      request,
+      on(name: string, notify: (report: UsageReport) => void) {
+        const listener = (event: Event) => notify((event as CustomEvent<UsageReport>).detail)
+        events.addEventListener(name, listener)
+        return { dispose: () => events.removeEventListener(name, listener) }
+      },
+    },
     on: nothing,
-    shell: { openExternal: async (url: string) => (console.log('openExternal', url), { opened: true }) },
+    shell: {
+      openExternal: async (url: string) => {
+        const target = new URL(url)
+        if (target.origin === 'https://twitter.com' && target.pathname === '/intent/tweet') {
+          window.open(target.href, '_blank', 'noopener,noreferrer')
+        } else console.log('openExternal', url)
+        return { opened: true }
+      },
+    },
   },
 })
 await import('../../src/panel/main')

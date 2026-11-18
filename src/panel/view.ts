@@ -1,10 +1,12 @@
 // Turns the panel's state into DOM. Pure: it never calls Orca, the callbacks do.
-import type { UsageReport } from '../core/report'
+import { visibleAccounts, weeklyUsage, type UsageReport } from '../core/report'
 import type { Preferences } from '../preferences'
 import { accountRow } from './account-row'
 import { el, iconButton } from './dom'
 import type { ViewContext } from './format'
 import { settingsView, type SettingsActions } from './settings-view'
+
+import { tiboMenu, tiboPost } from './tibo-view'
 
 export type PanelState = {
   report: UsageReport | null
@@ -22,6 +24,7 @@ export type PanelState = {
 }
 
 export type Actions = SettingsActions & {
+  setTibo: (active: boolean) => void
   refresh: () => void
   showSettings: () => void
   /** Opens a page in the browser; null where Orca cannot open links (browser clients). */
@@ -31,6 +34,7 @@ export type Actions = SettingsActions & {
 
 /** The first line: settings and refresh on the right, and why the last read failed, if it did, on the left. */
 function toolbar(state: PanelState, actions: Actions): HTMLElement {
+  const active = !!state.report?.tiboReset
   const refresh = iconButton('Refresh', 'refresh', 'refresh', actions.refresh)
   refresh.disabled = state.loading
   refresh.classList.toggle('spinning', state.loading)
@@ -38,7 +42,13 @@ function toolbar(state: PanelState, actions: Actions): HTMLElement {
     'div',
     'toolbar',
     el('span', 'toolbar-error', state.error ?? ''),
-    el('span', 'tools', iconButton('Settings', 'gear', 'gear', actions.showSettings), refresh),
+    el(
+      'span',
+      'tools',
+      tiboMenu(active, actions.setTibo),
+      iconButton('Settings', 'gear', 'gear', actions.showSettings),
+      refresh,
+    ),
   )
 }
 
@@ -56,6 +66,7 @@ function credit(actions: Actions): HTMLElement | string {
 
 function accountsView(state: PanelState, report: UsageReport, actions: Actions, locale: string): HTMLElement {
   const ctx: ViewContext = {
+    showSpendAdvice: !report.tiboReset,
     locale,
     readAt: report.readAt,
     animate: state.animate,
@@ -63,16 +74,20 @@ function accountsView(state: PanelState, report: UsageReport, actions: Actions, 
     onToggle: actions.toggle,
     openExternal: actions.openExternal,
   }
+  const accounts = visibleAccounts(report)
+  const banner = report.tiboReset
+    ? tiboPost(weeklyUsage(accounts), accounts.length, report.tiboReset, actions.openExternal)
+    : ''
   const list =
-    report.accounts.length === 0
+    accounts.length === 0
       ? el(
           'div',
           'empty',
-          el('p', 'empty-title', 'No accounts yet'),
+          el('p', 'empty-title', report.tiboReset ? 'No Codex accounts yet' : 'No accounts yet'),
           el('p', 'muted', 'Add an account in Orca and it shows up here.'),
         )
-      : el('div', 'accounts', ...report.accounts.map((account) => accountRow(account, ctx)))
-  return el('div', 'panel', toolbar(state, actions), list, credit(actions))
+      : el('div', 'accounts', ...accounts.map((account) => accountRow(account, ctx)))
+  return el('div', 'panel', toolbar(state, actions), banner, list, credit(actions))
 }
 
 /** Placeholder rows in the shape of the account list, so the panel does not jump when the report arrives. */

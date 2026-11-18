@@ -67,7 +67,42 @@ export type OkAccountReport = Pick<OkUsage, 'provider' | 'account' | 'status' | 
 
 export type AccountReport = OkAccountReport | (UnavailableUsage & { key: string })
 
+export type TiboMission = {
+  startedAt: number
+  finishedAt: number | null
+  stats?: { accounts: number; localTokens: number | null }
+}
+
+export function restoreMission(value: unknown, now: number): TiboMission | null {
+  if (value === true) return { startedAt: now, finishedAt: null }
+  if (!value || typeof value !== 'object' || !('startedAt' in value) || !('finishedAt' in value)) return null
+  const { startedAt, finishedAt } = value
+  if (typeof startedAt !== 'number' || !Number.isFinite(startedAt)) return null
+  if (finishedAt !== null && (typeof finishedAt !== 'number' || !Number.isFinite(finishedAt) || finishedAt < startedAt))
+    return null
+  const mission: TiboMission = { startedAt, finishedAt }
+  if (
+    'stats' in value &&
+    value.stats &&
+    typeof value.stats === 'object' &&
+    'accounts' in value.stats &&
+    'localTokens' in value.stats
+  ) {
+    const { accounts, localTokens } = value.stats
+    if (
+      typeof accounts === 'number' &&
+      Number.isSafeInteger(accounts) &&
+      accounts > 0 &&
+      (localTokens === null ||
+        (typeof localTokens === 'number' && Number.isSafeInteger(localTokens) && localTokens >= 0))
+    )
+      mission.stats = { accounts, localTokens }
+  }
+  return mission
+}
+
 export type UsageReport = {
+  tiboReset?: TiboMission
   accounts: AccountReport[]
   rules: AlertRules
   /** Epoch ms when this report was worked out. Every time left counts from here. */
@@ -147,9 +182,58 @@ function sortRank(account: AccountReport): number {
   return account.status === 'ok' ? ORDER[account.level] : ORDER.ok + 1
 }
 
-export function buildReport(accounts: AccountUsage[], rules: AlertRules, now: number): UsageReport {
-  const reported = accounts.map((usage) => reportAccount(usage, rules, now))
-  return { accounts: reported.sort((a, b) => sortRank(a) - sortRank(b)), rules, readAt: now }
+function isCodex(account: { provider: string }): boolean {
+  return account.provider === 'Codex'
+}
+
+export function visibleAccounts(report: UsageReport): AccountReport[] {
+  return report.tiboReset ? report.accounts.filter(isCodex) : report.accounts
+}
+
+export function weeklyUsage(accounts: AccountReport[]) {
+  const readings = accounts.flatMap((account) => {
+    const weekly = account.status === 'ok' && account.windows.find((window) => window.kind === 'weekly')
+    return weekly ? [weekly.usedPercent] : []
+  })
+  return {
+    complete:
+      accounts.length > 0 && readings.length === accounts.length && readings.every((percent) => percent === 100),
+    count: readings.length,
+    percent: readings.length ? readings.reduce((sum, used) => sum + used, 0) / readings.length : null,
+  }
+}
+
+const TIBO_RULES: AlertRules = {
+  general: { plan: [{ withinMs: 7 * DAY, minLeftPercent: 0, level: 'critical' }], reset: [] },
+  accounts: {},
+}
+
+export function buildReport(
+  accounts: AccountUsage[],
+  rules: AlertRules,
+  now: number,
+  tiboReset: TiboMission | null = null,
+): UsageReport {
+  const reported = accounts.map((usage) => reportAccount(usage, tiboReset && isCodex(usage) ? TIBO_RULES : rules, now))
+  const report: UsageReport = {
+    ...(tiboReset && { tiboReset }),
+    accounts: reported.sort((a, b) => sortRank(a) - sortRank(b)),
+    rules,
+    readAt: now,
+  }
+  return report
+}
+
+/** Only a fresh read from the current mission can earn a reset ticket. */
+export function recordCompletion(report: UsageReport) {
+  const mission = report.tiboReset
+  if (mission && mission.finishedAt === null && weeklyUsage(visibleAccounts(report)).complete) {
+    report.tiboReset = {
+      ...mission,
+      finishedAt: Math.max(report.readAt, mission.startedAt),
+      stats: { accounts: visibleAccounts(report).length, localTokens: null },
+    }
+  }
 }
 
 /** One account that needs spending now: what is about to be lost, and by when. */
@@ -182,7 +266,7 @@ function spendCall(account: AccountReport): SpendCall | null {
 
 /** Every account that needs spending, most pressing first: worst level, then the soonest deadline. */
 export function spendCalls(report: UsageReport): SpendCall[] {
-  return report.accounts
+  return visibleAccounts(report)
     .flatMap((account) => spendCall(account) ?? [])
     .sort((a, b) => ORDER[a.level] - ORDER[b.level] || a.by - b.by)
 }

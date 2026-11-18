@@ -1,7 +1,13 @@
 // The states the panel has to draw, as a stand-in for the worker. `npm run preview` serves them
 // outside Orca, because Orca's own scenario tooling only covers components panels.
 import { DEFAULT_ALERT_RULES, parseAlertRules, type AlertRules } from '../../src/core/alerts'
-import { buildReport, type UsageReport } from '../../src/core/report'
+import {
+  buildReport,
+  recordCompletion,
+  restoreMission,
+  type TiboMission,
+  type UsageReport,
+} from '../../src/core/report'
 import { accountKey, type AccountUsage, type UsageWindow } from '../../src/core/usage'
 import { DEFAULT_PREFERENCES, parsePreferences, type Preferences } from '../../src/preferences'
 
@@ -79,6 +85,7 @@ const SCENARIOS: Record<string, AccountUsage[] | 'loading' | 'error'> = {
     account('Claude', 'max', [weekly(87, 6 * DAY + 7 * HOUR)]),
     account('Grok', null, [weekly(89, 5 * DAY + 5 * HOUR)]),
   ],
+  'tibo-complete': [account('Codex', 'pro', [weekly(0, 3 * DAY)])],
   'no-accounts': [],
   loading: 'loading',
   error: 'error',
@@ -103,14 +110,23 @@ const RULES: Record<string, AlertRules> = {
 export const scenarioNames = Object.keys(SCENARIOS)
 
 /** Answers the panel's requests the way src/app.ts does, from the named scenario. */
-export function fakeWorker(name: string): (request: string, input?: unknown) => Promise<UsageReport | Preferences> {
+export function fakeWorker(
+  name: string,
+  simulatedUsage?: () => number,
+): (request: string, input?: unknown) => Promise<UsageReport | Preferences> {
   const scenario = SCENARIOS[name]
   if (scenario === undefined) throw new Error(`Unknown scenario "${name}". Known: ${scenarioNames.join(', ')}`)
   let rules = RULES[name] ?? DEFAULT_ALERT_RULES
+  const saved = simulatedUsage ? localStorage.getItem('tibo-preview-mission') : null
+  let mission: TiboMission | null = simulatedUsage
+    ? restoreMission(saved === null ? true : JSON.parse(saved), Date.now())
+    : null
   let preferences = DEFAULT_PREFERENCES
   return async (request, input) => {
     if (scenario === 'loading') return new Promise(() => {})
     if (scenario === 'error') throw new Error('The worker could not be reached.')
+    if (request === 'tibo.set')
+      mission = (input as { active: boolean }).active ? (mission ?? { startedAt: Date.now(), finishedAt: null }) : null
     if (request === 'preferences.read') return preferences
     if (request === 'preferences.save') {
       const parsed = parsePreferences(input)
@@ -122,6 +138,15 @@ export function fakeWorker(name: string): (request: string, input?: unknown) => 
       if (!parsed) throw new Error('Those alert rules are not valid.')
       rules = parsed
     }
-    return buildReport(scenario, rules, Date.now())
+    const accounts = simulatedUsage ? [account('Codex', 'pro', [weekly(100 - simulatedUsage(), 3 * DAY)])] : scenario
+    if (simulatedUsage && simulatedUsage() < 100 && mission?.finishedAt != null)
+      mission = { startedAt: Date.now(), finishedAt: null }
+    const report = buildReport(accounts, rules, Date.now(), mission)
+    recordCompletion(report)
+    if (report.tiboReset?.finishedAt != null && simulatedUsage)
+      report.tiboReset.stats = { accounts: accounts.length, localTokens: 1248576 }
+    mission = report.tiboReset ?? null
+    if (simulatedUsage) localStorage.setItem('tibo-preview-mission', JSON.stringify(mission))
+    return report
   }
 }

@@ -61,6 +61,7 @@ npm install
 npm run types                 # writes Orca's typings to .orca/types
 orca plugin dev watch .
 npm run check                 # format, types, tests, manifest
+npm run preview -- --tibo     # open .orca/preview/tibo.html to simulate usage milestones and completion
 npm run preview               # the panel against test/preview/scenarios.ts, outside Orca
 ```
 

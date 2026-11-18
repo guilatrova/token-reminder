@@ -2,6 +2,7 @@
 import { formatDuration } from '../core/alerts'
 
 export type ViewContext = {
+  showSpendAdvice: boolean
   locale: string
   /** The report's `readAt`: every "time left" counts from here, like the report does. */
   readAt: number
