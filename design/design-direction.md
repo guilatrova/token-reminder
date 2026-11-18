@@ -51,7 +51,8 @@ reads `--c`.
 
 ## The account row
 
-One `<button aria-expanded>` per account, a grid of seven cells:
+One `<button aria-expanded>` per account, a grid of seven cells shared by the whole list, so names, bars and numbers
+line up from row to row and every bar is the same length:
 
 `avatar 22px | name and plan | bar (1fr, min 48px) | tanks | % left 60px | time 50px | chevron 12px`
 
