@@ -23,7 +23,8 @@ export function start(orca: OrcaWorkerApi, sources: Record<string, UsageSource>)
   }
 
   orca.panels.handle('usage.read', refresh)
-  const timer = setInterval(refreshInBackground, POLL_MS)
+  // Unreferenced: the timer alone must not keep a process alive (a test that fails before stopping it).
+  const timer = setInterval(refreshInBackground, POLL_MS).unref()
   refreshInBackground()
   return () => clearInterval(timer)
 }

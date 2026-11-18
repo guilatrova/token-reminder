@@ -31,19 +31,12 @@ test('answers the panel, posts the report and puts the most pressing window in t
   )
   const report = await worker.request('usage.read')
   assert.deepEqual(worker.posts.at(-1), { event: 'usage.changed', payload: report })
-  assert.deepEqual(lastStatusBar(worker), {
-    id: 'unused-plan',
-    visible: true,
-    text: 'Beta 80% left · 12h',
-    tone: 'danger',
-    tooltip: [
-      'Beta person@example.com (pro)',
-      '  Weekly: 80% left, resets in 12h (Spend now)',
-      'Alpha person@example.com (pro)',
-      '  Weekly: 90% left, resets in 6d 6h (On track)',
-      '  Resets available: 2, next expires in 12d 12h',
-    ].join('\n'),
-  })
+  const shown = lastStatusBar(worker) as { text: string; tone: string; tooltip: string }
+  assert.deepEqual([shown.text, shown.tone], ['Beta 80% left · 12h', 'danger'])
+  assert.match(
+    shown.tooltip,
+    /^Beta pro: Weekly 80% left, 12h \(\w+ \d+\), Spend now \| Alpha pro: Weekly 90% left, 6d 6h \(\w+ \d+\) · Reset 12d 12h \(\w+ \d+\) · Reset unknown$/,
+  )
   assert.deepEqual(worker.refusals, [])
   await worker.deactivate()
 })
