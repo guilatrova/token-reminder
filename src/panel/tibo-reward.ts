@@ -92,7 +92,7 @@ function showResetTicket(elapsed: number, stats: TiboMission['stats'], openExter
   const hint = el('p', 'mission-share-hint')
   hint.setAttribute('role', 'status')
   const draft = new URL('https://twitter.com/intent/tweet')
-  draft.searchParams.set('text', stats ? `${tweet} ${accountLabel}.` : tweet)
+  draft.searchParams.set('text', tweet)
   const share = el('a', 'btn', 'Share on X')
   share.href = draft.href
   share.target = '_blank'
