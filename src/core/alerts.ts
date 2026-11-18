@@ -20,6 +20,19 @@ export const DEFAULT_ALERT_RULES: AlertRule[] = [
   { withinMs: 10 * HOUR, minLeftPercent: 90, level: 'urgent' },
 ]
 
+function isAlertRule(value: unknown): value is AlertRule {
+  if (typeof value !== 'object' || value === null) return false
+  const { withinMs, minLeftPercent, level } = value as Record<string, unknown>
+  const within = typeof withinMs === 'number' && Number.isFinite(withinMs) && withinMs > 0
+  const left = typeof minLeftPercent === 'number' && minLeftPercent >= 0 && minLeftPercent <= 100
+  return within && left && (level === 'warning' || level === 'urgent')
+}
+
+/** Rules as they come from storage or a request; null when the value is not a list of valid rules. */
+export function parseAlertRules(value: unknown): AlertRule[] | null {
+  return Array.isArray(value) && value.every(isAlertRule) ? value : null
+}
+
 /** The session window resets every few hours, so losing its leftover is routine, not news. */
 const TRACKED_KINDS: WindowKind[] = ['weekly', 'monthly']
 

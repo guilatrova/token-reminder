@@ -22,6 +22,11 @@ const reading = (leftPercent: number, hoursToReset: number, resets = 0): Account
   resetCredits: { available: resets, expiresAt: resets ? [Date.now() + 300 * HOUR] : [] },
 })
 
+async function request(worker: Awaited<ReturnType<typeof mountWorker>>, name: 'usage.read') {
+  await worker.request(name)
+  return worker
+}
+
 const lastStatusBar = (worker: Awaited<ReturnType<typeof mountWorker>>) =>
   worker.host.callsOf('statusBar.update').at(-1)
 
@@ -69,4 +74,20 @@ test('says so when Orca manages no account', async () => {
     tooltip: 'No account managed by Orca was found.',
   })
   await worker.deactivate()
+})
+
+test('saved rules replace the built-in ones and survive a restart', async () => {
+  const sources = { Alpha: memoryUsage([reading(30, 100)]) }
+  const worker = await mountWorker(workerWith(sources))
+  assert.equal((lastStatusBar(await request(worker, 'usage.read')) as { tone: string }).tone, 'neutral')
+  const rules = [{ withinMs: 120 * HOUR, minLeftPercent: 20, level: 'urgent' as const }]
+  const report = await worker.request('rules.save', { rules })
+  assert.deepEqual(report.rules, rules)
+  assert.equal((lastStatusBar(worker) as { tone: string }).tone, 'danger')
+  await assert.rejects(worker.request('rules.save', { rules: [{ ...rules[0]!, minLeftPercent: 140 }] }))
+  await worker.deactivate()
+
+  const restarted = await mountWorker(workerWith(sources), { host: worker.host })
+  assert.deepEqual((await restarted.request('usage.read')).rules, rules)
+  await restarted.deactivate()
 })

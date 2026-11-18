@@ -15,9 +15,10 @@ import {
   Text,
   type PanelContext,
 } from 'orca'
-import { formatDuration, type AlertLevel } from './core/alerts'
+import { formatDuration, type AlertLevel, type AlertRule } from './core/alerts'
 import type { AccountReport, UsageReport } from './core/report'
 import { leftPercent } from './core/usage'
+import { RulesEditor } from './rules-editor'
 import { LEVEL_TONE, WINDOW_LABEL } from './tones'
 import './protocol'
 
@@ -25,11 +26,14 @@ const report = atom<UsageReport | null>(null)
 const loading = atom(false)
 /** Why the last read failed as a whole; null when it worked. */
 const failure = atom<string | null>(null)
+/** Whether the alert rules are showing instead of the accounts. */
+const editingRules = atom(false)
 
-async function refresh(): Promise<void> {
+/** Runs a worker request that answers a report, tracking its progress and failure. */
+async function load(request: () => Promise<UsageReport>): Promise<void> {
   set(loading, true)
   try {
-    set(report, await plugin.request('usage.read'))
+    set(report, await request())
     set(failure, null)
   } catch (error) {
     set(failure, error instanceof Error ? error.message : String(error))
@@ -37,6 +41,9 @@ async function refresh(): Promise<void> {
     set(loading, false)
   }
 }
+
+const refresh = (): Promise<void> => load(() => plugin.request('usage.read'))
+const saveRules = (rules: AlertRule[]): Promise<void> => load(() => plugin.request('rules.save', { rules }))
 
 export function setup(ctx: PanelContext): void {
   ctx.subscriptions.push(plugin.on('usage.changed', (next) => set(report, next)))
@@ -109,6 +116,20 @@ function Account({ account, now }: { account: AccountReport; now: number }) {
   )
 }
 
+function Accounts({ current }: { current: UsageReport }) {
+  return (
+    <Stack gap="md">
+      {current.accounts.length === 0 ? (
+        <EmptyState icon="agent" title="No accounts" description="Add an account in Orca to see it here." />
+      ) : null}
+      {current.accounts.flatMap((account, index) => [
+        <Separator key={`separator-${index}`} />,
+        <Account key={`${account.provider}:${account.account ?? index}`} account={account} now={current.readAt} />,
+      ])}
+    </Stack>
+  )
+}
+
 export default function Panel() {
   const current = read(report)
   const error = read(failure)
@@ -118,20 +139,23 @@ export default function Panel() {
         <Heading>
           Unused <Text muted>· left</Text>
         </Heading>
-        <IconButton icon="refresh" label="Refresh" variant="ghost" disabled={read(loading)} onPress={refresh} />
+        <Row gap="xs">
+          <IconButton
+            icon="settings"
+            label="Alert rules"
+            variant={read(editingRules) ? 'solid' : 'ghost'}
+            onPress={() => set(editingRules, !read(editingRules))}
+          />
+          <IconButton icon="refresh" label="Refresh" variant="ghost" disabled={read(loading)} onPress={refresh} />
+        </Row>
       </Row>
       {error ? (
         <Text size="sm" tone="danger">
           {error}
         </Text>
       ) : null}
-      {current?.accounts.length === 0 ? (
-        <EmptyState icon="agent" title="No accounts" description="Add an account in Orca to see it here." />
-      ) : null}
-      {current?.accounts.flatMap((account, index) => [
-        <Separator key={`separator-${index}`} />,
-        <Account key={`${account.provider}:${account.account ?? index}`} account={account} now={current.readAt} />,
-      ])}
+      {current && read(editingRules) ? <RulesEditor rules={current.rules} onChange={saveRules} /> : null}
+      {current && !read(editingRules) ? <Accounts current={current} /> : null}
     </Stack>
   )
 }
