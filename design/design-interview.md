@@ -30,4 +30,20 @@ week" scenario, dark and light, and a working alert-rules editor behind the gear
 Proposals in the prototype that the product has not decided: the "time left" marker, the "~N% about to go unused"
 figure (plan left minus time left), and the rules chart.
 
+Answer: **A**. "A, mas quero também que seja collapsible e mais enxuto. Você precisa considerar os rate limit resets também."
+
+Implies: one line per account that opens for detail; drop the big number and the chips; rate-limit resets are part of
+the judgement, not a footnote. B and C are rejected.
+
+## Q2. How should rate-limit resets count?
+
+Shown on A, now one collapsible line per account (accounts that need spending start open), with a third simulated
+scenario, "Reset expiring".
+
+- Each unused reset is a small block after the account's bar and a deadline line in the detail.
+- The same alert rules judge a reset: how close its expiry is, and how much of the current window is still unused
+  (a reset cannot be cashed in while the plan is full). A reset that fires a rule colours the account.
+- **Advice on / off**: with resets available, one line says what to do: "Use the 85% before Tue, Nov 24 and you can
+  cash in a reset. That is about 14% a day."
+
 Answer: pending.
