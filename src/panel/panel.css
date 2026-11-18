@@ -479,6 +479,40 @@ select {
   outline-offset: 1px;
 }
 
+/* Loading: rows in the shape of the list, with a slow sweep of light */
+.row.skeleton {
+  grid-template-columns: 22px auto minmax(48px, 1fr) 38px 50px;
+  cursor: default;
+}
+.bone {
+  display: block;
+  height: 10px;
+  border-radius: 99px;
+  background: linear-gradient(
+    90deg,
+    var(--track) 25%,
+    color-mix(in srgb, var(--orca-foreground) 22%, transparent) 50%,
+    var(--track) 75%
+  );
+  background-size: 300% 100%;
+  animation: sweep 1.6s ease-in-out infinite;
+}
+.avatar-bone {
+  height: 22px;
+  border-radius: 7px;
+}
+.bar-bone {
+  height: 6px;
+}
+@keyframes sweep {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

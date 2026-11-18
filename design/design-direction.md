@@ -97,7 +97,8 @@ Opens under the row with a `0.25s` height transition. In order:
 
 ## Other states
 
-- **Reading, first time**: "Reading usage…" in secondary text.
+- **Reading, first time**: three placeholder rows in the shape of an account row (avatar, name, bar, share, time),
+  filled with the bar-track colour and a slow sweep of light; no sweep under `prefers-reduced-motion`.
 - **Read failed, nothing to show**: the error in the urgent colour and a "Try again" button.
 - **Read failed, report on screen**: the report stays; the footer shows the error in place of "Updated…".
 - **No accounts**: "No accounts yet" and, in secondary text, "Add an account in Orca and it shows up here."
