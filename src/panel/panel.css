@@ -226,41 +226,40 @@ select {
   box-shadow: 0 0 0 2px var(--orca-background);
   transition: height 0.15s ease;
 }
-.pace-label {
+.tip {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1;
+  bottom: calc(100% + 5px);
+  transform: translateX(-50%);
+  padding: 2px 7px;
+  border: 1px solid var(--orca-border);
+  border-radius: 6px;
+  background: var(--orca-popover);
+  color: var(--orca-popover-foreground);
+  box-shadow: 0 2px 8px color-mix(in srgb, black 30%, transparent);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.15s ease;
+  z-index: 1;
 }
-.pace-label.in {
-  padding-right: 5px;
-  color: var(--orca-background);
+/* In the detail the tooltip opens downwards: above the bar it would be cut by the collapsing area. */
+.pace.big .tip {
+  bottom: auto;
+  top: calc(100% + 5px);
 }
-.pace-label.out {
-  margin-left: 5px;
-  padding: 1px 3px;
-  border-radius: 4px;
-  background: var(--orca-background);
-}
-.row:hover .track,
-.row:focus-visible .track,
-.pace.big:hover .track {
+.pace:hover .track,
+.row:focus-visible .track {
   height: 14px;
 }
-.row:hover .tick,
-.row:focus-visible .tick,
-.pace.big:hover .tick {
+.pace:hover .tick,
+.row:focus-visible .tick {
   height: 18px;
 }
-.row:hover .pace-label,
-.row:focus-visible .pace-label,
-.pace.big:hover .pace-label {
+.pace:hover .tip,
+.row:focus-visible .tip {
   opacity: 1;
 }
 .pace.grow .fill {

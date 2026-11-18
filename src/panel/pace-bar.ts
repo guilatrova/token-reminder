@@ -1,12 +1,9 @@
 // The bar is the window: the fill is what was used, the tick is how much of its time has passed.
 // Where the tick is ahead of the fill, the stretch between them is hatched: plan that should be spent by now.
-// It is slim at rest; hovering thickens it and shows the share used.
+// It is slim at rest; hovering thickens it and shows the share used in a tooltip.
 import type { WindowReport } from '../core/report'
 import { el } from './dom'
 import { percent } from './format'
-
-/** Below this share the fill is too short to hold its own label, so the label sits just after it. */
-const LABEL_FITS_INSIDE = 15
 
 export function paceBar(window: WindowReport, big: boolean, animate: boolean): HTMLElement {
   const used = window.usedPercent
@@ -25,11 +22,10 @@ export function paceBar(window: WindowReport, big: boolean, animate: boolean): H
     tick.style.right = `${timeLeftPercent}%`
     bar.append(tick)
   }
-  const inside = used >= LABEL_FITS_INSIDE
-  const label = el('span', inside ? 'pace-label in' : 'pace-label out', percent(used))
-  if (inside) label.style.right = `${100 - used}%`
-  else label.style.left = `${used}%`
-  bar.append(label)
+  // Anchored to the end of the fill, kept clear of the bar's ends so the panel never clips it.
+  const tip = el('span', 'tip', `${percent(used)} used`)
+  tip.style.left = `clamp(24px, ${used}%, calc(100% - 24px))`
+  bar.append(tip)
 
   const width = `${used}%`
   if (!animate) {

@@ -79,9 +79,9 @@ The bar is the window, read left to right as both the plan and the clock:
 - **Hatch**: where the tick is ahead of the fill, the stretch between them is striped at 45 degrees in the level
   colour at 60%. That is the plan that should have been spent by now, and is on course to go unused.
 - The empty track to the right of both is what is left.
-- **Slim at rest, fat on hover**: the bar is `4px` high. Hovering the row (or the bar in the detail) thickens it to
-  `14px` and shows the share used, in `10px/700`: inside the fill at its right end, in the page colour, or just
-  after the fill when the fill is under 15% wide. The bar keeps a `14px` box, so thickening moves nothing.
+- **Slim at rest, fat on hover**: the bar is `4px` high. Hovering it thickens it to `14px` and shows a tooltip at the
+  end of the fill, "26% used": popover colours, a hairline border, `6px` radius, `11px/600`. Above the bar in a row,
+  below it in the detail. The bar keeps a `14px` box, so thickening moves nothing.
 - With an unknown reset time there is no tick and no hatch.
 - The fill grows from 0 in `0.7s`; the hatch fades in after it. No motion under `prefers-reduced-motion`.
 

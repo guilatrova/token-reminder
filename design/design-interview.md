@@ -75,3 +75,4 @@ Unprompted, on the panel running in Orca:
   thickens it to `14px` and shows the share used. The used/left caption under the bar is gone.
 - "Tem como no footer ter um link pro meu github, mas bem pequenininho... tipo créditos: Who created this?" A tiny
   credit link under the list.
+- "A % queria que fosse um tooltip e não texto dentro." The share used shows in a tooltip at the end of the fill.
