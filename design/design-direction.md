@@ -178,7 +178,7 @@ follows general has "Customize" there instead, which copies the general rules in
 
 One row per rule, read as a sentence:
 
-`Yellow ▾ | ≤ 2d ▾ to reset | ≥ 50% ▾ left` (a reset rule says "to expire")
+`Yellow ▾ | ≤ 2d ▾ to reset | ≥ 50% ▾ left` (a reset rule says "to expire" and omits the share when its minimum is zero)
 
 - The rows sit `10px` in from the group's title and share one grid, so the words line up from rule to rule. They
   are compact: `2px` of padding above and below.

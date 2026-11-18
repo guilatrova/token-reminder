@@ -99,24 +99,22 @@ function ruleRow(
     `${focus}-within`,
     (value) => change({ withinMs: Number(value) }),
   )
-  const left = chip(
-    'Unused at least',
-    numberOptions(KINDS[kind].left, rule.minLeftPercent, (value) => `${value}%`),
-    String(rule.minLeftPercent),
-    `${focus}-left`,
-    (value) => change({ minLeftPercent: Number(value) }),
-  )
+  const row = el('div', `rule lvl-${rule.level}`, level, el('span', 'cond', '≤', within, RULE_DEADLINE[kind]))
+  if (kind !== 'reset' || rule.minLeftPercent > 0) {
+    const left = chip(
+      'Unused at least',
+      numberOptions(KINDS[kind].left, rule.minLeftPercent, (value) => `${value}%`),
+      String(rule.minLeftPercent),
+      `${focus}-left`,
+      (value) => change({ minLeftPercent: Number(value) }),
+    )
+    row.append(el('span', 'cond', '≥', left, 'left'))
+  }
   const remove = iconButton('Remove rule', 'trash', `${focus}-remove`, () =>
     onSave(rules.filter((_, i) => i !== index)),
   )
-  return el(
-    'div',
-    `rule lvl-${rule.level}`,
-    level,
-    el('span', 'cond', '≤', within, RULE_DEADLINE[kind]),
-    el('span', 'cond', '≥', left, 'left'),
-    remove,
-  )
+  row.append(remove)
+  return row
 }
 
 function textLink(label: string, focusKey: string, onClick: () => void, primary = false): HTMLButtonElement {
