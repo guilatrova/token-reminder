@@ -1235,3 +1235,6 @@ select {
 .mission-share-hint:empty {
   display: none;
 }
+.mission-share-hint strong {
+  color: var(--ok);
+}

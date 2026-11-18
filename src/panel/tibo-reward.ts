@@ -113,7 +113,7 @@ function showResetTicket(elapsed: number, stats: TiboMission['stats'], openExter
         canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('PNG unavailable'))), 'image/png'),
       )
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })])
-      hint.textContent = 'Image copied. Paste it into your X draft.'
+      hint.replaceChildren('Image copied. ', el('strong', '', 'Paste it into your X draft.'))
     } catch {
       hint.textContent = 'Use Save PNG and attach the image to your X draft.'
     }
