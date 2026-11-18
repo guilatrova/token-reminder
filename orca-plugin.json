@@ -15,9 +15,8 @@
       {
         "id": "usage",
         "title": "Token Reminder",
-        "icon": "bell",
-        "entry": "src/panel.tsx",
-        "ui": "components"
+        "icon": "gauge",
+        "entry": "src/panel/index.html"
       }
     ],
     "commands": [
@@ -30,7 +29,7 @@
     "statusBarItems": [
       {
         "id": "unused-plan",
-        "icon": "bell",
+        "icon": "gauge",
         "text": "Reading usage",
         "tooltip": "Token Reminder",
         "command": "token-reminder.toggle-sidebar"

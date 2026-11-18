@@ -29,7 +29,7 @@ src/adapters/   codex.ts, memory.ts
 src/status-bar.ts  what the status bar item says about a report
 src/app.ts         what the worker does with its sources
 src/worker.ts      composition root: reads the environment and picks the adapters
-src/panel.tsx      draws the report
+src/panel/          the sidebar panel: an HTML page that draws the report
 ```
 
 To add a provider, write `src/adapters/<provider>.ts` returning a `UsageSource` and add one line to `sources` in
@@ -44,7 +44,8 @@ Needs Orca 1.4.248 or newer.
 npm install
 npm run types                 # writes Orca's typings to .orca/types
 orca plugin dev watch .
-npm run check                 # format, types, tests, panel scenarios, manifest
+npm run check                 # format, types, tests, manifest
+npm run preview               # the panel against test/preview/scenarios.ts, outside Orca
 ```
 
 `orca plugin dev watch` loads the folder into your Orca and reloads it on every save. The plugin runs a Node worker

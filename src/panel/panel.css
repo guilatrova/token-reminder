@@ -1,0 +1,9 @@
+body {
+  margin: 0;
+  padding: 12px;
+  font:
+    13px system-ui,
+    sans-serif;
+  color: var(--orca-foreground);
+  background: var(--orca-background);
+}

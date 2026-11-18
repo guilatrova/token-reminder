@@ -46,4 +46,15 @@ scenario, "Reset expiring".
 - **Advice on / off**: with resets available, one line says what to do: "Use the 85% before Tue, Nov 24 and you can
   cash in a reset. That is about 14% a day."
 
-Answer: pending.
+Answer: accepted as shown, advice on. "Ok, to gostando..."
+
+## Q3. Header and icon
+
+Unprompted: "Só quero um header/icone melhor e menos genérico. Como o foco é token, usa algum icone bom de fato. E
+tira o header, acho que ele vai ser inutil."
+
+Implies: no headline at the top of the panel; refresh and settings move to a quiet footer. The bell is replaced.
+Orca's icon list for the sidebar tab and the status bar has no token or coin, so `gauge` is the pick. Still open:
+whether `gauge` is the icon he wants.
+
+The rules chart from option C was never commented on, so it is not part of the direction.

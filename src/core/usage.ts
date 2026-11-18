@@ -6,6 +6,8 @@ export type WindowKind = 'session' | 'weekly' | 'monthly'
 
 export type UsageWindow = {
   kind: WindowKind
+  /** How long the window lasts, in ms. */
+  lengthMs: number
   /** 0-100. Zero is a measured value. */
   usedPercent: number
   /** Epoch ms; null when the provider did not say. */

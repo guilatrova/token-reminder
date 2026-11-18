@@ -31,7 +31,7 @@ test('maps the plan window and when each available reset expires', async () => {
       account: 'person@example.com',
       status: 'ok',
       plan: 'pro',
-      windows: [{ kind: 'weekly', usedPercent: 15, resetsAt: 1_800_000_000_000 }],
+      windows: [{ kind: 'weekly', lengthMs: 604_800_000, usedPercent: 15, resetsAt: 1_800_000_000_000 }],
       resetCredits: {
         available: 2,
         expiresAt: [Date.parse('2027-01-20T00:00:00Z'), Date.parse('2027-02-01T00:00:00Z')],

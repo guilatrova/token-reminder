@@ -44,17 +44,20 @@ export function worseLevel(a: AlertLevel, b: AlertLevel): AlertLevel {
   return SEVERITY[a] >= SEVERITY[b] ? a : b
 }
 
-/** Null when the window is not judged: an untracked kind, or a reset time nobody reported. */
-export function evaluateAlert(window: UsageWindow, rules: AlertRule[], now: number): Alert | null {
-  if (!TRACKED_KINDS.includes(window.kind) || window.resetsAt === null) return null
-  const untilReset = window.resetsAt - now
-  const left = leftPercent(window)
+/** The worst rule a deadline matches: how close it is, and how much of the plan is still unused. */
+export function judge(untilMs: number, leftPercent: number, rules: AlertRule[]): Alert {
   let worst: Alert = { level: 'ok', rule: null }
   for (const rule of rules) {
-    const matches = untilReset <= rule.withinMs && left >= rule.minLeftPercent
+    const matches = untilMs <= rule.withinMs && leftPercent >= rule.minLeftPercent
     if (matches && SEVERITY[rule.level] > SEVERITY[worst.level]) worst = { level: rule.level, rule }
   }
   return worst
+}
+
+/** Null when the window is not judged: an untracked kind, or a reset time nobody reported. */
+export function evaluateAlert(window: UsageWindow, rules: AlertRule[], now: number): Alert | null {
+  if (!TRACKED_KINDS.includes(window.kind) || window.resetsAt === null) return null
+  return judge(window.resetsAt - now, leftPercent(window), rules)
 }
 
 /** "2d", "10h", "1d 4h": the two largest units, enough for a rule or a tooltip. */

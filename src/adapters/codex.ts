@@ -66,11 +66,13 @@ function windowKind(seconds: number | null): WindowKind | null {
 function parseWindow(raw: unknown): UsageWindow | null {
   if (!isRecord(raw)) return null
   const usedPercent = finite(raw.used_percent)
-  const kind = windowKind(finite(raw.limit_window_seconds))
-  if (usedPercent === null || kind === null) return null
+  const lengthSeconds = finite(raw.limit_window_seconds)
+  const kind = windowKind(lengthSeconds)
+  if (usedPercent === null || lengthSeconds === null || kind === null) return null
   const resetAtSeconds = finite(raw.reset_at)
   return {
     kind,
+    lengthMs: lengthSeconds * 1000,
     usedPercent: Math.min(100, Math.max(0, usedPercent)),
     resetsAt: resetAtSeconds !== null && resetAtSeconds > 0 ? resetAtSeconds * 1000 : null,
   }

@@ -18,7 +18,14 @@ const reading = (leftPercent: number, hoursToReset: number, resets = 0): Account
   status: 'ok',
   account: 'person@example.com',
   plan: 'pro',
-  windows: [{ kind: 'weekly', usedPercent: 100 - leftPercent, resetsAt: Date.now() + hoursToReset * HOUR }],
+  windows: [
+    {
+      kind: 'weekly',
+      lengthMs: 168 * HOUR,
+      usedPercent: 100 - leftPercent,
+      resetsAt: Date.now() + hoursToReset * HOUR,
+    },
+  ],
   resetCredits: { available: resets, expiresAt: resets ? [Date.now() + 300 * HOUR] : [] },
 })
 

@@ -23,11 +23,10 @@ function windowText(window: WindowReport, now: number): string {
 /** Orca draws a tooltip as one flowing paragraph, so each account is a single sentence. */
 function accountText(account: AccountReport, now: number): string {
   if (account.status === 'unavailable') return `${account.provider}: unavailable. ${account.detail}`
-  const credits = account.resetCredits
-  const resets = Array.from(
-    { length: credits?.available ?? 0 },
-    (_, index) => `Reset ${deadlineText(credits?.expiresAt[index] ?? null, now)}`,
-  )
+  const resets = account.resets.map((reset) => {
+    const urgency = reset.alert && reset.alert.level !== 'ok' ? ', expiring unused' : ''
+    return `Reset ${deadlineText(reset.expiresAt, now)}${urgency}`
+  })
   const parts = [...account.windows.map((window) => windowText(window, now)), ...resets]
   return `${[account.provider, account.plan].filter(Boolean).join(' ')}: ${parts.join(' · ')}`
 }

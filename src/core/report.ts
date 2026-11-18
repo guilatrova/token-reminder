@@ -1,14 +1,43 @@
 // What the panel and the status bar show: every account's usage with its alerts, worst first.
-import { evaluateAlert, worseLevel, type Alert, type AlertLevel, type AlertRule } from './alerts'
+// Everything a surface displays is worked out here; surfaces only draw it.
+import { evaluateAlert, judge, worseLevel, type Alert, type AlertLevel, type AlertRule } from './alerts'
 import { leftPercent, type AccountUsage, type UsageWindow } from './usage'
 
-export type WindowReport = UsageWindow & { alert: Alert | null }
+const DAY = 24 * 60 * 60 * 1000
+
+export type WindowReport = UsageWindow & {
+  alert: Alert | null
+  /** Share of the window's time still ahead, 0-100. Null when the reset time is unknown. */
+  timeLeftPercent: number | null
+  /** Plan left beyond the time left: what is on course to go unused. Null when the reset time is unknown. */
+  atRiskPercent: number | null
+}
+
+/** One reset the account can still redeem. Judged like a window: its expiry against the plan left. */
+export type ResetReport = { expiresAt: number | null; alert: Alert | null }
+
+/** How to put a reset to use: empty the plan before its window resets, then redeem. */
+export type Advice = {
+  leftPercent: number
+  /** Epoch ms of the main window's reset. */
+  before: number
+  /** The pace that empties the plan in time. Null with under a day to go, where a daily pace says nothing. */
+  perDayPercent: number | null
+}
 
 type OkUsage = Extract<AccountUsage, { status: 'ok' }>
 type UnavailableUsage = Extract<AccountUsage, { status: 'unavailable' }>
 
-export type AccountReport =
-  (Omit<OkUsage, 'windows'> & { windows: WindowReport[]; level: AlertLevel }) | UnavailableUsage
+export type OkAccountReport = Pick<OkUsage, 'provider' | 'account' | 'status' | 'plan'> & {
+  /** Longest window first: the first one is the plan period and drives the account's summary. */
+  windows: WindowReport[]
+  resets: ResetReport[]
+  advice: Advice | null
+  /** The worst alert among the windows and the resets. */
+  level: AlertLevel
+}
+
+export type AccountReport = OkAccountReport | UnavailableUsage
 
 export type UsageReport = {
   accounts: AccountReport[]
@@ -19,11 +48,45 @@ export type UsageReport = {
 
 const ORDER: Record<AlertLevel, number> = { urgent: 0, warning: 1, ok: 2 }
 
+function reportWindow(window: UsageWindow, rules: AlertRule[], now: number): WindowReport {
+  const timeLeftPercent =
+    window.resetsAt === null ? null : Math.min(100, Math.max(0, ((window.resetsAt - now) / window.lengthMs) * 100))
+  const atRiskPercent = timeLeftPercent === null ? null : Math.max(0, leftPercent(window) - timeLeftPercent)
+  return { ...window, alert: evaluateAlert(window, rules, now), timeLeftPercent, atRiskPercent }
+}
+
+function advise(main: WindowReport | undefined, resetCount: number, now: number): Advice | null {
+  if (!main || main.resetsAt === null || resetCount === 0) return null
+  const left = leftPercent(main)
+  const until = main.resetsAt - now
+  if (left <= 0 || until <= 0) return null
+  return { leftPercent: left, before: main.resetsAt, perDayPercent: until >= DAY ? left / (until / DAY) : null }
+}
+
 function reportAccount(usage: AccountUsage, rules: AlertRule[], now: number): AccountReport {
   if (usage.status === 'unavailable') return usage
-  const windows = usage.windows.map((window) => ({ ...window, alert: evaluateAlert(window, rules, now) }))
-  const level = windows.reduce<AlertLevel>((worst, window) => worseLevel(worst, window.alert?.level ?? 'ok'), 'ok')
-  return { ...usage, windows, level }
+  const windows = usage.windows
+    .map((window) => reportWindow(window, rules, now))
+    .sort((a, b) => b.lengthMs - a.lengthMs)
+  const main = windows[0]
+  const credits = usage.resetCredits
+  // A reset cannot be put to use while the plan is still full, so its expiry is judged against the plan left.
+  const resets = Array.from({ length: credits?.available ?? 0 }, (_, index): ResetReport => {
+    const expiresAt = credits?.expiresAt[index] ?? null
+    return { expiresAt, alert: main && expiresAt !== null ? judge(expiresAt - now, leftPercent(main), rules) : null }
+  })
+  const alerts = [...windows, ...resets].map((judged) => judged.alert?.level ?? 'ok')
+  const { provider, account, status, plan } = usage
+  return {
+    provider,
+    account,
+    status,
+    plan,
+    windows,
+    resets,
+    advice: advise(main, resets.length, now),
+    level: alerts.reduce<AlertLevel>(worseLevel, 'ok'),
+  }
 }
 
 function sortRank(account: AccountReport): number {
@@ -37,24 +100,23 @@ export function buildReport(accounts: AccountUsage[], rules: AlertRule[], now: n
 
 export type Headline = { provider: string; leftPercent: number; level: AlertLevel; resetsAt: number }
 
-/** The most pressing judged window: worst alert first, then the soonest reset. Null when none is judged. */
+/** The most pressing account by its main window: worst level first, then the soonest reset. */
 export function headline(report: UsageReport): Headline | null {
   let best: Headline | null = null
   for (const account of report.accounts) {
-    if (account.status !== 'ok') continue
-    for (const window of account.windows) {
-      if (!window.alert || window.resetsAt === null) continue
-      const { level } = window.alert
-      const candidate = {
-        provider: account.provider,
-        leftPercent: leftPercent(window),
-        level,
-        resetsAt: window.resetsAt,
-      }
-      const beats =
-        !best || ORDER[level] < ORDER[best.level] || (level === best.level && candidate.resetsAt < best.resetsAt)
-      if (beats) best = candidate
+    const main = account.status === 'ok' ? account.windows[0] : undefined
+    if (account.status !== 'ok' || !main || main.resetsAt === null) continue
+    const candidate = {
+      provider: account.provider,
+      leftPercent: leftPercent(main),
+      level: account.level,
+      resetsAt: main.resetsAt,
     }
+    const beats =
+      !best ||
+      ORDER[candidate.level] < ORDER[best.level] ||
+      (candidate.level === best.level && candidate.resetsAt < best.resetsAt)
+    if (beats) best = candidate
   }
   return best
 }
