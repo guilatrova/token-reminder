@@ -1,5 +1,5 @@
 // Turns the panel's state into DOM. Pure: it never calls Orca, the callbacks do.
-import type { UsageReport } from '../core/report'
+import { visibleAccounts, weeklyUsage, type UsageReport } from '../core/report'
 import type { Preferences } from '../preferences'
 import { accountRow } from './account-row'
 import { el, iconButton } from './dom'
@@ -84,23 +84,19 @@ function accountsView(state: PanelState, report: UsageReport, actions: Actions, 
     onToggle: actions.toggle,
     openExternal: actions.openExternal,
   }
-  const accounts = report.tiboReset
-    ? report.accounts.filter((account) => account.provider === 'Codex')
-    : report.accounts
+  const accounts = visibleAccounts(report)
   const banner = el('div', 'tibo-progress')
   if (report.tiboReset) {
-    const weekly = accounts.flatMap((account) =>
-      account.status === 'ok' ? account.windows.filter((w) => w.kind === 'weekly').slice(0, 1) : [],
-    )
+    const weekly = weeklyUsage(accounts)
     const progress = el('progress', '')
     progress.max = 100
     progress.setAttribute('aria-label', 'Average weekly Codex usage')
-    if (weekly.length) {
-      progress.value = weekly.reduce((sum, w) => sum + w.usedPercent, 0) / weekly.length
+    if (weekly.percent !== null) {
+      progress.value = weekly.percent
       banner.append(el('strong', '', Math.round(progress.value) + '% of weekly Codex quota used'), progress)
     } else banner.append('Weekly Codex usage unavailable')
-    if (weekly.length < accounts.length)
-      banner.append(el('small', '', `Usage available for ${weekly.length} of ${accounts.length} accounts`))
+    if (weekly.count < accounts.length)
+      banner.append(el('small', '', `Usage available for ${weekly.count} of ${accounts.length} accounts`))
   }
   const list =
     accounts.length === 0

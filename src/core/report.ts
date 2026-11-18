@@ -148,15 +148,32 @@ function sortRank(account: AccountReport): number {
   return account.status === 'ok' ? ORDER[account.level] : ORDER.ok + 1
 }
 
+function isCodex(account: { provider: string }): boolean {
+  return account.provider === 'Codex'
+}
+
+export function visibleAccounts(report: UsageReport): AccountReport[] {
+  return report.tiboReset ? report.accounts.filter(isCodex) : report.accounts
+}
+
+export function weeklyUsage(accounts: AccountReport[]) {
+  const readings = accounts.flatMap((account) => {
+    const weekly = account.status === 'ok' && account.windows.find((window) => window.kind === 'weekly')
+    return weekly ? [weekly.usedPercent] : []
+  })
+  return {
+    count: readings.length,
+    percent: readings.length ? readings.reduce((sum, used) => sum + used, 0) / readings.length : null,
+  }
+}
+
 const TIBO_RULES: AlertRules = {
   general: { plan: [{ withinMs: 7 * DAY, minLeftPercent: 0, level: 'critical' }], reset: [] },
   accounts: {},
 }
 
 export function buildReport(accounts: AccountUsage[], rules: AlertRules, now: number, tiboReset = false): UsageReport {
-  const reported = accounts.map((usage) =>
-    reportAccount(usage, tiboReset && usage.provider === 'Codex' ? TIBO_RULES : rules, now),
-  )
+  const reported = accounts.map((usage) => reportAccount(usage, tiboReset && isCodex(usage) ? TIBO_RULES : rules, now))
   return {
     ...(tiboReset && { tiboReset }),
     accounts: reported.sort((a, b) => sortRank(a) - sortRank(b)),
@@ -195,8 +212,7 @@ function spendCall(account: AccountReport): SpendCall | null {
 
 /** Every account that needs spending, most pressing first: worst level, then the soonest deadline. */
 export function spendCalls(report: UsageReport): SpendCall[] {
-  return report.accounts
-    .filter((account) => !report.tiboReset || account.provider === 'Codex')
+  return visibleAccounts(report)
     .flatMap((account) => spendCall(account) ?? [])
     .sort((a, b) => ORDER[a.level] - ORDER[b.level] || a.by - b.by)
 }
