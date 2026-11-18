@@ -1,6 +1,7 @@
 // Wires the panel to Orca: asks the worker for the report, keeps the state, and redraws on every change.
 import '../protocol'
 import type { AlertRule } from '../core/alerts'
+import type { Preferences } from '../preferences'
 import type { UsageReport } from '../core/report'
 import { panelView, type Actions, type PanelState } from './view'
 
@@ -11,6 +12,7 @@ if (!root) throw new Error('The panel page has no #root element.')
 
 const state: PanelState = {
   report: null,
+  preferences: null,
   loading: true,
   error: null,
   view: 'accounts',
@@ -26,24 +28,34 @@ function render() {
   if (focusKey) root?.querySelector<HTMLElement>(`[data-focus="${focusKey}"]`)?.focus()
 }
 
-async function run(request: () => Promise<UsageReport>) {
+/** Asks the worker for something and keeps the answer; a failure leaves what was on screen and says why. */
+let pending = 0
+
+async function run<T>(request: () => Promise<T>, keep: (answer: T) => void) {
+  pending++
   state.loading = true
   render()
   try {
-    state.report = await request()
+    keep(await request())
     state.error = null
   } catch (error) {
     state.error = error instanceof Error ? error.message : String(error)
   }
-  state.loading = false
+  pending--
+  state.loading = pending > 0
   render()
 }
 
+const keepReport = (report: UsageReport) => void (state.report = report)
+const keepPreferences = (preferences: Preferences) => void (state.preferences = preferences)
+
 const actions: Actions = {
-  refresh: () => run(() => orca.plugin.request('usage.read')),
-  saveRules: (rules: AlertRule[]) => run(() => orca.plugin.request('rules.save', { rules })),
-  showRules: () => {
-    state.view = 'rules'
+  refresh: () => run(() => orca.plugin.request('usage.read'), keepReport),
+  saveRules: (rules: AlertRule[]) => run(() => orca.plugin.request('rules.save', { rules }), keepReport),
+  savePreferences: (preferences: Preferences) =>
+    run(() => orca.plugin.request('preferences.save', preferences), keepPreferences),
+  showSettings: () => {
+    state.view = 'settings'
     render()
   },
   showAccounts: () => {
@@ -61,4 +73,8 @@ orca.plugin.on('usage.changed', (report) => {
   render()
 })
 
-await actions.refresh()
+// The worker answers from its last read, so opening the tab does not ask the providers again.
+await Promise.all([
+  run(() => orca.plugin.request('usage.latest'), keepReport),
+  run(() => orca.plugin.request('preferences.read'), keepPreferences),
+])

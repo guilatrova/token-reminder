@@ -105,7 +105,9 @@ Opens under the row with a `0.25s` height transition. In order:
 
 ## Other states
 
-- **Reading, first time**: three placeholder rows in the shape of an account row (avatar, name, bar, share, time),
+- **Opening the panel**: the worker answers from its last read, so the list shows at once; when that read is over
+  2 minutes old a new one runs behind it and the list updates when it lands.
+- **Reading, nothing to show yet**: three placeholder rows in the shape of an account row (avatar, name, bar, share, time),
   filled with the bar-track colour and a slow sweep of light; no sweep under `prefers-reduced-motion`.
 - **Read failed, nothing to show**: the error in the urgent colour and a "Try again" button.
 - **Read failed, report on screen**: the report stays; the toolbar shows the error on its left.
@@ -117,7 +119,7 @@ Opens under the row with a `0.25s` height transition. In order:
 
 ## Toolbar
 
-The first line of the panel: two `24px` icon buttons on the right, alert rules (gear) and refresh. The refresh icon
+The first line of the panel: two `24px` icon buttons on the right, settings (gear) and refresh. The refresh icon
 spins while a read is running. There is no title and no "updated" text.
 
 ## Credit
@@ -125,10 +127,27 @@ spins while a read is running. There is no title and no "updated" text.
 Under the list, centred, one tiny link in faint text (`10px`): "Who created this?". It opens the author's GitHub page
 in the system browser. It is left out where Orca cannot open links.
 
-## Alert rules
+## Settings
 
-The gear swaps the list for the rules; a back button ("‹ Alert rules") returns. Under it, one sentence: "Warn me when
-a reset is close and a lot is still unused."
+The gear swaps the list for the settings. Its first line takes the toolbar's place: a back icon button and the title
+"Settings" (`14px/600`); a failed save shows its error on the right of that line and the previous values stay.
+Sections are spaced apart, each under an `11px/600` uppercase label in faint text. One surface: no cards, no borders,
+no dividers. Every change is saved at once.
 
-One row per rule, with no divider lines: a `4px` colour bar, then three labelled selects ("Reset within", "Unused at least", "Alert") and a
-remove button. Below: "+ Add rule" and "Defaults". Every change is saved at once.
+**Alerts.** The label, with an add icon button (plus) on its right. Under it, in `12px` secondary text: "Warn me when
+a reset is close and a lot is still unused." Then one row per rule, read as a sentence:
+
+`dot 6px | Yellow ▾ | ≤ 2d ▾ to reset | ≥ 50% ▾ left`
+
+- The rows share one grid, so the words line up from rule to rule.
+- The three values are native selects drawn as words: no box, `13px/600`, a tiny caret, and the bar-track colour as
+  the fill when pointed at. The colour select and the dot take the rule's level colour.
+- The row takes the hover fill (`8px` radius, bleeding `8px` into the padding) when pointed at or focused within; only
+  then the remove button (trash) shows, over the row's right end.
+- With no rule: "No alerts: nothing turns yellow or red." in faint text.
+- Under the rows, "Restore defaults": a tiny link in faint text (`11px`) that turns the text colour on hover.
+
+**Status bar.** One line that is the switch itself (`<button role="switch">`): "Show in the status bar" in `600`,
+under it "The most pressing account, next to Orca's usage." in `12px` secondary text, and a `28 x 16px` switch on the
+right, `ok` green when on. The line takes the hover fill. On by default. When off, the item leaves Orca's status bar
+and the worker stops its 10-minute reads; the panel still reads when it opens.

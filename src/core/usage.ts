@@ -35,7 +35,7 @@ export type AccountReading =
   | { status: 'unavailable'; account: string | null; reason: UnavailableReason; detail: string }
 
 /**
- * The port every provider implements. Adapters: codex, memory.
+ * The port every provider implements. Adapters: claude, codex, grok, memory.
  * `read` answers one entry per login it finds, none when the person has no login. A login it
  * cannot read comes back as `unavailable`; it throws only when it cannot look for logins at all.
  */

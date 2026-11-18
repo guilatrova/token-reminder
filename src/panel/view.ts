@@ -1,29 +1,29 @@
 // Turns the panel's state into DOM. Pure: it never calls Orca, the callbacks do.
-import type { AlertRule } from '../core/alerts'
 import type { UsageReport } from '../core/report'
+import type { Preferences } from '../preferences'
 import { accountRow } from './account-row'
 import { el, iconButton } from './dom'
 import type { ViewContext } from './format'
-import { rulesView } from './rules-view'
+import { settingsView, type SettingsActions } from './settings-view'
 
 export type PanelState = {
   report: UsageReport | null
+  /** Null until the worker has answered them. */
+  preferences: Preferences | null
   loading: boolean
   error: string | null
-  view: 'accounts' | 'rules'
+  view: 'accounts' | 'settings'
   /** The person's own open and close choices; a missing key means "open when the account needs spending". */
   opened: Map<string, boolean>
   /** True until a report has been drawn once, so refreshes do not replay the bar animation. */
   animate: boolean
 }
 
-export type Actions = {
+export type Actions = SettingsActions & {
   refresh: () => void
-  showRules: () => void
-  showAccounts: () => void
+  showSettings: () => void
   /** Opens the author's page in the browser; null where Orca cannot open links (browser clients). */
   openCredit: (() => void) | null
-  saveRules: (rules: AlertRule[]) => void
   toggle: (key: string, open: boolean) => void
 }
 
@@ -36,7 +36,7 @@ function toolbar(state: PanelState, actions: Actions): HTMLElement {
     'div',
     'toolbar',
     el('span', 'toolbar-error', state.error ?? ''),
-    el('span', 'tools', iconButton('Alert rules', 'gear', 'gear', actions.showRules), refresh),
+    el('span', 'tools', iconButton('Settings', 'gear', 'gear', actions.showSettings), refresh),
   )
 }
 
@@ -103,6 +103,6 @@ export function panelView(state: PanelState, actions: Actions, locale: string): 
     if (state.loading || state.error === null) return loadingView()
     return failedView(state.error, actions)
   }
-  if (state.view === 'rules') return rulesView(report.rules, state.error, actions.saveRules, actions.showAccounts)
+  if (state.view === 'settings') return settingsView(report.rules, state.preferences, state.error, actions)
   return accountsView(state, report, actions, locale)
 }

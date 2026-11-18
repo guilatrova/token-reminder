@@ -434,8 +434,7 @@ select {
   background: var(--orca-accent);
   color: var(--orca-foreground);
 }
-.icon-btn:focus-visible,
-.back:focus-visible {
+.icon-btn:focus-visible {
   outline: 2px solid var(--orca-ring);
   outline-offset: 1px;
 }
@@ -471,77 +470,205 @@ select {
   border-radius: 3px;
 }
 
-/* Alert rules */
-.back {
-  all: unset;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding-top: 10px;
-  font-size: 16px;
+/* Settings */
+.settings-head {
+  justify-content: flex-start;
+  gap: 4px;
+  margin-left: -6px;
+}
+.settings-title {
+  margin: 0;
+  font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
 }
-.back .icon {
-  width: 15px;
-  height: 15px;
+.settings-head .toolbar-error {
+  margin-left: auto;
+  text-align: right;
+}
+.settings-section {
+  padding-top: 18px;
+}
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 24px;
+}
+.section-label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.section-hint {
+  margin: 0 0 8px;
+  font-size: 12px;
   color: var(--orca-muted-foreground);
 }
-.hint {
-  margin: 4px 0 12px;
-  color: var(--orca-muted-foreground);
+.section-hint.faint {
+  color: var(--faint);
+}
+
+/* One alert rule, read as a sentence: dot, colour, "≤ 2d to reset", "≥ 50% left". One grid, so the words line up. */
+.rules {
+  display: grid;
+  grid-template-columns: 6px auto auto 1fr;
+  column-gap: 8px;
 }
 .rule {
+  position: relative;
+  width: calc(100% + 16px);
+  margin: 0 -8px;
   display: grid;
-  grid-template-columns: 4px repeat(3, minmax(0, 1fr)) 28px;
-  gap: 8px;
-  align-items: end;
-  padding: 10px 0;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  padding: 5px 8px;
+  border-radius: 8px;
 }
-.rule .bar {
-  align-self: stretch;
-  border-radius: 4px;
+.rule:hover,
+.rule:focus-within {
+  background: var(--orca-accent);
+}
+.rule .dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
   background: var(--c);
 }
-.rule .icon-btn {
-  width: 28px;
-  height: 28px;
-}
-.field {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-  font-size: 11px;
+.cond {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
   color: var(--orca-muted-foreground);
-}
-.field span {
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
-select {
+.chip {
   appearance: none;
-  width: 100%;
-  min-width: 0;
-  padding: 6px 20px 6px 8px;
-  border: 1px solid var(--orca-border);
-  border-radius: 8px;
-  background-color: var(--orca-muted);
+  field-sizing: content;
+  padding: 2px 16px 2px 6px;
+  border: 0;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--orca-foreground);
+  background-color: transparent;
   background-image:
-    linear-gradient(45deg, transparent 50%, var(--orca-muted-foreground) 50%),
-    linear-gradient(135deg, var(--orca-muted-foreground) 50%, transparent 50%);
+    linear-gradient(45deg, transparent 50%, var(--faint) 50%),
+    linear-gradient(135deg, var(--faint) 50%, transparent 50%);
   background-position:
-    calc(100% - 11px) 55%,
-    calc(100% - 7px) 55%;
-  background-size: 4px 4px;
+    calc(100% - 8px) 55%,
+    calc(100% - 5px) 55%;
+  background-size: 3px 3px;
   background-repeat: no-repeat;
+  justify-self: start;
   cursor: pointer;
 }
-.rule-actions {
-  display: flex;
-  gap: 8px;
-  padding-top: 12px;
+.chip:hover {
+  background-color: var(--track);
 }
+.chip.level {
+  color: var(--c);
+}
+/* Over the end of the row, so a narrow panel does not need a column for it. */
+.rule .icon-btn {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  background: var(--orca-accent);
+  opacity: 0;
+}
+.rule:hover .icon-btn,
+.rule:focus-within .icon-btn {
+  opacity: 1;
+}
+.rule .icon-btn:hover {
+  color: var(--urgent);
+}
+.text-link {
+  all: unset;
+  display: block;
+  width: fit-content;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--faint);
+  cursor: pointer;
+}
+.text-link:hover {
+  color: var(--orca-foreground);
+}
+.text-link:focus-visible {
+  outline: 2px solid var(--orca-ring);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* A preference: the whole line is the switch. */
+.setting {
+  all: unset;
+  box-sizing: border-box;
+  width: calc(100% + 16px);
+  margin: 4px -8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.setting:hover {
+  background: var(--orca-accent);
+}
+.setting:focus-visible {
+  outline: 2px solid var(--orca-ring);
+  outline-offset: 2px;
+}
+.setting-text {
+  display: grid;
+  gap: 1px;
+}
+.setting-title {
+  font-weight: 600;
+}
+.setting-hint {
+  font-size: 12px;
+  color: var(--orca-muted-foreground);
+}
+.switch {
+  flex: none;
+  position: relative;
+  width: 28px;
+  height: 16px;
+  border-radius: 99px;
+  background: var(--track);
+  transition: background 0.15s ease;
+}
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--orca-background);
+  box-shadow: 0 0 0 1px var(--track);
+  transition: transform 0.15s ease;
+}
+[aria-checked='true'] .switch {
+  background: var(--ok);
+}
+[aria-checked='true'] .switch::after {
+  transform: translateX(12px);
+  box-shadow: none;
+}
+
 .btn {
   all: unset;
   padding: 6px 12px;
@@ -550,10 +677,6 @@ select {
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-}
-.btn.ghost {
-  border-color: transparent;
-  color: var(--orca-muted-foreground);
 }
 .btn:hover {
   background: var(--orca-accent);

@@ -3,6 +3,7 @@
 import { DEFAULT_ALERT_RULES, parseAlertRules, type AlertRule } from '../../src/core/alerts'
 import { buildReport, type UsageReport } from '../../src/core/report'
 import type { AccountUsage, UsageWindow } from '../../src/core/usage'
+import { DEFAULT_PREFERENCES, parsePreferences, type Preferences } from '../../src/preferences'
 
 const HOUR = 60 * 60 * 1000
 const DAY = 24 * HOUR
@@ -81,13 +82,20 @@ const SCENARIOS: Record<string, AccountUsage[] | 'loading' | 'error'> = {
 export const scenarioNames = Object.keys(SCENARIOS)
 
 /** Answers the panel's requests the way src/app.ts does, from the named scenario. */
-export function fakeWorker(name: string): (request: string, input?: unknown) => Promise<UsageReport> {
+export function fakeWorker(name: string): (request: string, input?: unknown) => Promise<UsageReport | Preferences> {
   const scenario = SCENARIOS[name]
   if (scenario === undefined) throw new Error(`Unknown scenario "${name}". Known: ${scenarioNames.join(', ')}`)
   let rules: AlertRule[] = DEFAULT_ALERT_RULES
+  let preferences = DEFAULT_PREFERENCES
   return async (request, input) => {
     if (scenario === 'loading') return new Promise(() => {})
     if (scenario === 'error') throw new Error('The worker could not be reached.')
+    if (request === 'preferences.read') return preferences
+    if (request === 'preferences.save') {
+      const parsed = parsePreferences(input)
+      if (!parsed) throw new Error('Those preferences are not valid.')
+      return (preferences = parsed)
+    }
     if (request === 'rules.save') {
       const parsed = parseAlertRules((input as { rules?: unknown }).rules)
       if (!parsed) throw new Error('Those alert rules are not valid.')

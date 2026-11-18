@@ -76,3 +76,15 @@ Unprompted, on the panel running in Orca:
 - "Tem como no footer ter um link pro meu github, mas bem pequenininho... tipo créditos: Who created this?" A tiny
   credit link under the list.
 - "A % queria que fosse um tooltip e não texto dentro." The share used shows in a tooltip at the end of the fill.
+
+## Q5. Settings, reloads and the status bar
+
+Unprompted, on the panel running in Orca:
+
+- "A tela do settings tá muito feia... vc caprichou bem na tela principal com efeitos, hover, icones pequenos, fonte
+  limpa, etc, mas aqui em settings tá um nojo." The boxed, labelled selects are gone: each rule is a sentence of
+  borderless selects with a colour dot, rows take the hover fill, add and remove are icon buttons.
+- "É possivel cachear essa tela pra nao demorar tanto pra recarregar? ... ela pode atualizar alguns secs depois."
+  The worker answers from its last read; the skeleton only shows when there is nothing recent to show.
+- "Podemos adicionar uma config em settings pra hide a status bar no footer? ... (fica on by default)." A switch in
+  Settings, on by default.

@@ -11,6 +11,7 @@ export const ICONS = {
   ),
   chevron: svg('<path d="M9 6l6 6-6 6"/>', 2.4),
   back: svg('<path d="M15 18l-6-6 6-6"/>', 2.2),
+  plus: svg('<path d="M12 5v14M5 12h14"/>', 2.2),
   trash: svg('<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/>'),
   bulb: svg('<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/>'),
 }
