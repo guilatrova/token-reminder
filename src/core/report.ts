@@ -73,13 +73,13 @@ function reportWindow(window: UsageWindow, rules: AlertRule[], now: number): Win
 
 /**
  * One mark per place on the bar; where rules share a place, the most severe one is shown.
- * A place the usage has already reached has no mark: that rule can no longer match in this window.
+ * A place the usage has already passed has no mark: that rule can no longer match in this window.
  */
 function ruleMarks(rules: AlertRule[], usedPercent: number): RuleMark[] {
   const byPlace = new Map<number, AlertRule>()
   for (const rule of rules) {
     const place = 100 - rule.minLeftPercent
-    if (place <= usedPercent) continue
+    if (place < usedPercent) continue
     const shown = byPlace.get(place)
     if (!shown || isWorseRule(rule.level, shown.level)) byPlace.set(place, rule)
   }
