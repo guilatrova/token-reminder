@@ -43,32 +43,32 @@
 .tank.lvl-critical,
 .line.lvl-critical > i,
 .acct.lvl-critical .pct,
-.rule.lvl-critical .chip.level,
 .rule-mark.lvl-critical::before {
   background-image: var(--surface);
   background-size: 155% 170%;
   background-position: var(--flow) center;
 }
-.acct.lvl-critical .pct,
-.rule.lvl-critical .chip.level {
+.acct.lvl-critical .pct {
   background-clip: text;
   color: transparent;
 }
 .rule.lvl-critical .chip.level {
-  appearance: auto;
-  padding-right: 2px;
-}
-.rule.lvl-critical option {
-  color: var(--orca-foreground);
-  background: var(--orca-background);
+  color: var(--critical-amber);
 }
 .rule-mark.lvl-critical::before {
   border: 0;
   width: 2px;
   mask-image: repeating-linear-gradient(to bottom, black 0 4px, transparent 4px 6px);
 }
+@keyframes critical-text {
+  to {
+    color: var(--urgent);
+  }
+}
 @media (prefers-reduced-motion: no-preference) {
-  .rule.lvl-critical .level,
+  .rule.lvl-critical .chip.level {
+    animation: critical-text 3.8s ease-in-out infinite alternate;
+  }
   .tank.lvl-critical,
   .line.lvl-critical > i,
   .acct.lvl-critical .pct,
