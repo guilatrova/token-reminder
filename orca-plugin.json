@@ -6,6 +6,10 @@
   "license": "MIT",
   "version": "0.1.0",
   "description": "Don't lose all your tokens nor resets! Get reminders before unused Claude, Codex, and Grok usage limits reset.",
+  "cover": {
+    "path": "assets/cover.png",
+    "alt": "Use all your tokens in time! Token Reminder showing remaining plan usage and reset times."
+  },
   "engines": {
     "orca": ">=1.4.248"
   },
