@@ -156,10 +156,12 @@ export function formatDuration(ms: number): string {
   return parts.slice(0, 2).join(' ') || '0m'
 }
 
+/** What each kind of rule counts down to, as a rule's sentence says it. */
+export const RULE_DEADLINE: Record<RuleKind, string> = { plan: 'to reset', reset: 'to expire' }
+
 /** "≤ 2d to reset, ≥ 50% left": a rule as the settings spell it. */
 export function describeRule(rule: AlertRule, kind: RuleKind): string {
-  const deadline = kind === 'plan' ? 'to reset' : 'to expire'
-  return `≤ ${formatDuration(rule.withinMs)} ${deadline}, ≥ ${rule.minLeftPercent}% left`
+  return `≤ ${formatDuration(rule.withinMs)} ${RULE_DEADLINE[kind]}, ≥ ${rule.minLeftPercent}% left`
 }
 
 /** Whether `a` is the more severe rule level; a mark is the least. */
