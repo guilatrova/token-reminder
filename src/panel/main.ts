@@ -1,5 +1,6 @@
 // Wires the panel to Orca: asks the worker for the report, keeps the state, and redraws on every change.
 import '../protocol'
+import { animateMission } from './tibo-view'
 import type { AlertRules } from '../core/alerts'
 import type { Preferences } from '../preferences'
 import type { UsageReport } from '../core/report'
@@ -19,10 +20,22 @@ const state: PanelState = {
   animate: true,
 }
 
+let missionVisible = false
+let missionComplete = false
+let motionFrame = 0
+
 function render() {
   const active = document.activeElement
   const focusKey = active instanceof HTMLElement ? active.dataset.focus : undefined
   root?.replaceChildren(panelView(state, actions, orca.locale))
+  cancelAnimationFrame(motionFrame)
+  motionFrame = requestAnimationFrame(() => {
+    const post = root?.querySelector<HTMLElement>('.tibo-post')
+    const complete = post?.dataset.complete === 'true'
+    if (post) animateMission(post, !missionVisible, complete && !missionComplete)
+    missionVisible = !!post
+    if (post || !state.report?.tiboReset) missionComplete = complete
+  })
   if (state.report && state.view === 'accounts') state.animate = false
   if (focusKey) root?.querySelector<HTMLElement>(`[data-focus="${CSS.escape(focusKey)}"]`)?.focus()
 }

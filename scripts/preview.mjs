@@ -1,7 +1,7 @@
 // Builds a page that runs the real panel against test/preview/scenarios.ts, outside Orca:
 //   npm run preview   then open .orca/preview/index.html?scenario=late-week&theme=dark
 import { build } from 'esbuild'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises'
 
 const out = '.orca/preview'
 // One self-contained page: a browser will not load module files from disk.
@@ -29,6 +29,7 @@ const THEME = `
     --orca-border:#e1e4ea; --orca-input:#d5d9e0; --orca-ring:#2563eb; --orca-radius:8px; }`
 
 await mkdir(out, { recursive: true })
+await copyFile('src/panel/tibo.jpg', `${out}/tibo.jpg`)
 await writeFile(
   `${out}/index.html`,
   `<!doctype html>

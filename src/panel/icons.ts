@@ -3,6 +3,10 @@ const svg = (paths: string, width = 2) =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`
 
 export const ICONS = {
+  verified: svg(
+    '<path fill="#1d9bf0" stroke="none" d="m12 0 3 2 3.5.3 1.3 3.2 2.6 2.4-.5 3.5.5 3.6-2.6 2.4-1.3 3.2-3.5.3-3 2-3-2-3.5-.3-1.3-3.2-2.6-2.4.5-3.6-.5-3.5 2.6-2.4 1.3-3.2L9 2z"/><path stroke="#fff" d="m7.5 11.8 3 3 6-6"/>',
+  ),
+  play: svg('<path d="m7 4 13 8-13 8z" fill="currentColor" stroke="none"/>'),
   gear: svg(
     '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   ),

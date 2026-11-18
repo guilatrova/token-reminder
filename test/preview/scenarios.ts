@@ -79,6 +79,7 @@ const SCENARIOS: Record<string, AccountUsage[] | 'loading' | 'error'> = {
     account('Claude', 'max', [weekly(87, 6 * DAY + 7 * HOUR)]),
     account('Grok', null, [weekly(89, 5 * DAY + 5 * HOUR)]),
   ],
+  'tibo-complete': [account('Codex', 'pro', [weekly(0, 3 * DAY)])],
   'no-accounts': [],
   loading: 'loading',
   error: 'error',
