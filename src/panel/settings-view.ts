@@ -103,7 +103,6 @@ function ruleRow(
   return el(
     'div',
     `rule lvl-${rule.level}`,
-    el('i', 'dot'),
     level,
     el('span', 'cond', '≤', within, RULE_DEADLINE[kind]),
     el('span', 'cond', '≥', left, 'left'),

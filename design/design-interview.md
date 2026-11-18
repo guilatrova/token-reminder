@@ -118,3 +118,6 @@ Seven notes on the settings running in Orca, all applied:
 - "as ias devem ter icones como ja reusamos na pagina inicial." Provider marks on the tabs.
 - "Plan Reset -> Weekly reset", "Alinhar restore defaults à direita", "Title do 'Status Bar': poderia ser 'General'",
   "as descriptions poderiam ser uma tooltip." Done as said.
+- "faltou indentarmos... esses dots yellow/red tá repetitivo, acho que só o texto com cor tá elegante o bastante.
+  Acho que poderia ser mais compacto tbm, um pouco menor a fonte?" Rules are indented under their group, the dots are
+  gone, and the rows are tighter with a smaller font.

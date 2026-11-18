@@ -170,12 +170,13 @@ under the group, and turn the text colour on hover.
 
 One row per rule, read as a sentence:
 
-`dot 6px | Yellow ▾ | ≤ 2d ▾ to reset | ≥ 50% ▾ left` (a reset rule says "to expire")
+`Yellow ▾ | ≤ 2d ▾ to reset | ≥ 50% ▾ left` (a reset rule says "to expire")
 
-- The rows of a group share one grid, so the words line up from rule to rule.
-- The three values are native selects drawn as words: no box, `13px/600`, a tiny caret, and the bar-track colour as
-  the fill when pointed at. The colour select offers "No colour", "Yellow" and "Red"; it and the dot take the rule's
-  colour. A rule with no colour never alerts: it only marks the bar, as a spend to aim for.
+- The rows sit `10px` in from the group's title and share one grid, so the words line up from rule to rule. They
+  are compact: `2px` of padding above and below.
+- The three values are native selects drawn as words: no box, `12px/600` (the words between them `11px`), a tiny caret, and the bar-track colour as
+  the fill when pointed at. The colour select offers "No colour", "Yellow" and "Red"; it takes the rule's colour,
+  which is the only colour on the row. A rule with no colour never alerts: it only marks the bar, as a spend to aim for.
 - The row takes the hover fill (`8px` radius, bleeding `8px` into the padding) when pointed at or focused within; only
   then the remove button (trash) shows, over the row's right end.
 - With no rule: "No rules: nothing turns yellow or red." in faint text.
