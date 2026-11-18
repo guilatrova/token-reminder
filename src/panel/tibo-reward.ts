@@ -80,7 +80,6 @@ function showResetTicket(elapsed: number, openExternal: ViewContext['openExterna
   save.href = image.src
   save.download = 'tibo-reset-ticket.png'
   const close = el('button', 'btn', 'Close')
-  const actions = el('div', '', close, save)
   const hint = el('p', 'mission-share-hint')
   hint.setAttribute('role', 'status')
   const draft = new URL('https://twitter.com/intent/tweet')
@@ -113,7 +112,7 @@ function showResetTicket(elapsed: number, openExternal: ViewContext['openExterna
     share.textContent = 'Open X draft'
     share.click()
   }
-  actions.append(share)
+  const actions = el('div', 'mission-actions', close, share, save)
   const dialog = el('dialog', 'mission-dialog', image, hint, actions)
   dialog.setAttribute('aria-label', 'Reset ticket')
   close.onclick = () => dialog.close()
