@@ -44,9 +44,9 @@ export function tiboMenu(active: boolean, setMode: (active: boolean) => void) {
 const quips = [
   "You ain't gonna burn all these tokens in time pal haha",
   'A quarter gone. Did you ask Codex to name a variable?',
-  'Halfway. Whatever you do, don’t let it say “looks good to me.”',
-  'Okay, who told the agents they could spawn agents?',
-  'I went to press reset and you ate the whole button.',
+  "why you don't try some refactoring? maybe this will help you",
+  'my favorite part of this refactor is that the app looks exactly the same',
+  'Damn. You made it in time. Now I owe you a reset.',
 ]
 
 export function tiboPost(weekly: ReturnType<typeof weeklyUsage>, total: number) {
