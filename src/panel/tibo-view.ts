@@ -18,13 +18,8 @@ export function tiboMenu(active: boolean, setMode: (active: boolean) => void) {
   const menu = el('div', 'tibo-menu')
   menu.popover = 'auto'
   trigger.popoverTargetElement = menu
-  const action = el(
-    'button',
-    'tibo-action',
-    icon(active ? 'back' : 'play'),
-    active ? 'Leave Tibo Reset mode' : 'Start',
-    el('span', 'tibo-action-arrow', '→'),
-  )
+  const action = el('button', 'tibo-action', icon(active ? 'back' : 'play'), active ? 'Leave Tibo Reset mode' : 'Start')
+  if (!active) action.append(el('span', 'tibo-action-arrow', '→'))
   action.onclick = () => {
     menu.hidePopover()
     trigger.focus()
