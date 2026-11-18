@@ -47,7 +47,7 @@ reads `--c`.
 
 - `13px/1.4` system UI font, tabular numbers. Names `14px/600`. Secondary text `12px`. Footer `11px`.
 - Panel padding `6px 16px 16px`. Row padding `10px 0`. Grid gap `8px`. Detail is indented `30px` (under the name).
-- Radii: avatar `7px`, advice `8px`, bars and tanks fully rounded or `3px`.
+- Radii: letter avatar `7px`, advice `8px`, bars and tanks fully rounded or `3px`.
 
 ## The account row
 
@@ -56,8 +56,8 @@ line up from row to row and every bar is the same length:
 
 `avatar 22px | name and plan | bar (1fr, min 48px) | tanks | % left 60px | time 50px | chevron 12px`
 
-- **Avatar**: the provider's own mark at `14px`, the same ones Orca's usage meter shows, on the quiet fill with a
-  hairline border. A provider without a mark shows its first two letters, `10px/700`.
+- **Avatar**: the provider's own mark at `18px`, the same ones Orca's usage meter shows, with nothing around it: no
+  box and no border. A provider without a mark shows its first two letters, `10px/700`, on the quiet fill.
 - **Name and plan**: plan in secondary text, as the provider spells it.
 - **Bar**: only while the account is closed. See "The pace bar".
 - **Tanks**: one `9 x 12px` block per unused reset, coloured by that reset's own level; neutral (secondary text

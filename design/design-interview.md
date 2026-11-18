@@ -88,3 +88,4 @@ Unprompted, on the panel running in Orca:
   The worker answers from its last read; the skeleton only shows when there is nothing recent to show.
 - "Podemos adicionar uma config em settings pra hide a status bar no footer? ... (fica on by default)." A switch in
   Settings, on by default.
+- "Os icones das ias que vc add: remover borda ao redor, deixar clean." The provider marks lost their box and border.

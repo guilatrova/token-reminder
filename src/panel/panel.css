@@ -119,18 +119,26 @@ select {
   place-items: center;
   border-radius: 7px;
   background: var(--orca-muted);
-  border: 1px solid var(--orca-border);
   font-size: 10px;
   font-weight: 700;
 }
+/* A provider's own mark stands alone: no box around it. */
+.avatar.mark {
+  background: none;
+}
 .avatar.mark svg,
 .avatar.mark img {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   display: block;
 }
+/* A bitmap mark is black on white: blended so only the glyph shows, in the text colour of either theme. */
 .avatar.mark img {
-  border-radius: 3px;
+  mix-blend-mode: multiply;
+}
+.dark .avatar.mark img {
+  filter: invert(1);
+  mix-blend-mode: screen;
 }
 .who {
   display: flex;
