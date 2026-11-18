@@ -60,7 +60,7 @@ export function accountDetail(account: OkAccountReport, ctx: ViewContext): HTMLE
     }),
   )
   inner.append(paceBar(main, true, ctx.animate), note(main) ?? '', lines)
-  if (account.advice) inner.append(adviceView(account.advice, ctx))
+  if (ctx.showSpendAdvice && account.advice) inner.append(adviceView(account.advice, ctx))
   if (account.usagePage && ctx.openExternal) {
     inner.append(usagePageLink(account.usagePage, account.key, ctx.openExternal))
   }

@@ -66,6 +66,7 @@ function credit(actions: Actions): HTMLElement | string {
 
 function accountsView(state: PanelState, report: UsageReport, actions: Actions, locale: string): HTMLElement {
   const ctx: ViewContext = {
+    showSpendAdvice: !report.tiboReset,
     locale,
     readAt: report.readAt,
     animate: state.animate,
