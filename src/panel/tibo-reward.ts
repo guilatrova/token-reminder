@@ -36,13 +36,13 @@ function showResetTicket(elapsed: number, stats: TiboMission['stats'], openExter
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('Your browser could not draw the reset ticket.')
   const gradient = ctx.createLinearGradient(0, 0, 1080, 640)
-  gradient.addColorStop(0, '#121f22')
-  gradient.addColorStop(0.66, '#163b34')
-  gradient.addColorStop(1, '#374d35')
+  gradient.addColorStop(0, '#111419')
+  gradient.addColorStop(0.66, '#1b2029')
+  gradient.addColorStop(1, '#2e3440')
   ctx.fillStyle = gradient
   ctx.fillRect(0, 0, canvas.width, canvas.height)
   ctx.save()
-  ctx.strokeStyle = '#abf3c826'
+  ctx.strokeStyle = '#a6b4cb24'
   for (let i = 0; i < 22; i++) {
     ctx.beginPath()
     ctx.ellipse(1010, 20, 210 + i * 8, 120 + i * 8, -0.62, 0, 2 * Math.PI)
