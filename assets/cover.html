@@ -1,0 +1,317 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        width: 1600px;
+        height: 1000px;
+        overflow: hidden;
+      }
+      body {
+        background:
+          radial-gradient(900px 620px at 78% 42%, rgba(120, 140, 170, 0.1), transparent 70%),
+          radial-gradient(700px 500px at 8% 100%, rgba(248, 113, 113, 0.05), transparent 70%),
+          linear-gradient(180deg, #101216 0%, #0c0d10 100%);
+        color: #e8e9ec;
+        font-family: -apple-system, system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        position: relative;
+      }
+      .grain {
+        position: absolute;
+        inset: 0;
+        opacity: 0.5;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+        background-size: 4px 4px;
+      }
+      .left {
+        position: absolute;
+        left: 112px;
+        top: 0;
+        bottom: 0;
+        width: 600px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 52px;
+      }
+      .mark {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(160deg, #23262d, #181a1f);
+        border: 1px solid #2c3038;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      }
+      .mark svg {
+        width: 24px;
+        height: 24px;
+      }
+      .brand-name {
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      .brand-sub {
+        font-size: 13px;
+        color: #7d838e;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        margin-left: 4px;
+        padding-left: 14px;
+        border-left: 1px solid #2a2d34;
+      }
+      h1 {
+        font-family: ui-serif, 'New York', Georgia, serif;
+        font-weight: 500;
+        font-size: 84px;
+        line-height: 1.02;
+        letter-spacing: -0.025em;
+        color: #f2f2f0;
+      }
+      h1 em {
+        font-style: italic;
+        font-weight: 400;
+        background: linear-gradient(100deg, #f87171 0%, #ffbd61 60%, #fbbf24 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        padding-right: 6px;
+      }
+      .lede {
+        margin-top: 34px;
+        font-size: 21px;
+        line-height: 1.55;
+        color: #9aa0aa;
+        max-width: 520px;
+        font-weight: 400;
+      }
+      .lede b {
+        color: #d8dade;
+        font-weight: 500;
+      }
+      .legend {
+        margin-top: 52px;
+        display: flex;
+        gap: 30px;
+        font-size: 14px;
+        color: #8a909b;
+      }
+      .legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+      }
+      .legend i {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+
+      .stage {
+        position: absolute;
+        right: 96px;
+        top: 47%;
+        transform: translateY(-50%);
+        width: 680px;
+      }
+      .window {
+        border-radius: 16px;
+        overflow: hidden;
+        background: #16181d;
+        border: 1px solid #2a2d34;
+        box-shadow:
+          0 50px 120px -30px rgba(0, 0, 0, 0.8),
+          0 0 0 1px rgba(0, 0, 0, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      }
+      .bar {
+        height: 46px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 18px;
+        border-bottom: 1px solid #23262c;
+        background: #191b20;
+        font-size: 13px;
+        font-weight: 600;
+        color: #c9ccd2;
+      }
+      .bar svg {
+        width: 16px;
+        height: 16px;
+        color: #8a909b;
+      }
+      .bar .dots {
+        margin-left: auto;
+        display: flex;
+        gap: 14px;
+        color: #6b717c;
+      }
+      iframe {
+        display: block;
+        width: 100%;
+        height: 560px;
+        border: 0;
+        background: #16181d;
+      }
+      .status {
+        position: absolute;
+        right: 0;
+        bottom: -62px;
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        height: 38px;
+        padding: 0 16px;
+        border-radius: 10px;
+        background: #1a1c21;
+        border: 1px solid #2a2d34;
+        font-size: 13.5px;
+        color: #f87171;
+        font-weight: 500;
+        box-shadow: 0 20px 50px -14px rgba(0, 0, 0, 0.8);
+      }
+      .status svg {
+        width: 15px;
+        height: 15px;
+      }
+      .status .more {
+        color: #7d838e;
+        font-weight: 400;
+      }
+      .brand-sub,
+      .legend,
+      .status {
+        display: none;
+      }
+      .left {
+        left: 64px;
+        width: 495px;
+        top: 78px;
+        bottom: auto;
+      }
+      .brand {
+        margin-bottom: 55px;
+      }
+      .lede {
+        font-size: 34px;
+        line-height: 1.38;
+        margin-top: 40px;
+      }
+      .stage {
+        top: 115px;
+        left: 610px;
+        right: auto;
+        width: 562px;
+        transform: scale(1.7);
+        transform-origin: top left;
+      }
+      .left {
+        top: 192px;
+        left: 78px;
+        width: 535px;
+      }
+      .brand {
+        margin-bottom: 36px;
+      }
+      .stage {
+        top: 78px;
+        left: 689px;
+        transform: rotate(3.5deg) scale(1.7);
+      }
+      h1 {
+        font-size: 80px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="grain"></div>
+
+    <section class="left">
+      <div class="brand">
+        <div class="mark">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#e8e9ec"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="m12 14 4-4" />
+            <path d="M3.34 19a10 10 0 1 1 17.32 0" />
+          </svg>
+        </div>
+        <div class="brand-name">Token Reminder</div>
+      </div>
+      <h1>Use all your tokens <em>in time!</em></h1>
+      <p class="lede">
+        See what is still unused on your <b>Claude</b>, <b>Codex</b> and <b>Grok</b> plans, and get a nudge before a
+        reset throws it away.
+      </p>
+    </section>
+
+    <section class="stage">
+      <div class="window">
+        <div class="bar">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="m12 14 4-4" />
+            <path d="M3.34 19a10 10 0 1 1 17.32 0" />
+          </svg>
+          Token Reminder
+          <div class="dots">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"
+              />
+            </svg>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 12a9 9 0 0 1-15.5 6.3L3 16" />
+              <path d="M3 12a9 9 0 0 1 15.5-6.3L21 8" />
+              <path d="M21 3v5h-5M3 21v-5h5" />
+            </svg>
+          </div>
+        </div>
+        <iframe src="cover-panel.html" scrolling="no"></iframe>
+      </div>
+    </section>
+  </body>
+</html>
