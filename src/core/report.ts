@@ -4,12 +4,16 @@ import {
   evaluateAlert,
   isWorseRule,
   judge,
+  RESET_RULE_KIND,
   rulesFor,
+  WINDOW_RULE_KIND,
   worseLevel,
   type Alert,
   type AlertLevel,
   type AlertRule,
   type AlertRules,
+  type RuleKind,
+  type RuleSet,
 } from './alerts'
 import { accountKey, leftPercent, type AccountUsage, type UsageWindow } from './usage'
 
@@ -31,6 +35,7 @@ export type RuleMark = {
   /** How much more of the plan must be used to get there. */
   aheadPercent: number
   rule: AlertRule
+  kind: RuleKind
 }
 
 /** One reset the account can still redeem. Judged like a window: its expiry against the plan left. */
@@ -69,7 +74,7 @@ export type UsageReport = {
 
 const ORDER: Record<AlertLevel, number> = { urgent: 0, warning: 1, ok: 2 }
 
-function reportWindow(window: UsageWindow, rules: AlertRule[], now: number): WindowReport {
+function reportWindow(window: UsageWindow, rules: RuleSet, now: number): WindowReport {
   const timeLeftPercent =
     window.resetsAt === null ? null : Math.min(100, Math.max(0, ((window.resetsAt - now) / window.lengthMs) * 100))
   const atRiskPercent = timeLeftPercent === null ? null : Math.max(0, leftPercent(window) - timeLeftPercent)
@@ -80,7 +85,7 @@ function reportWindow(window: UsageWindow, rules: AlertRule[], now: number): Win
  * One mark per place on the bar; where rules share a place, the most severe one is shown.
  * A place the usage has already passed has no mark: that rule can no longer match in this window.
  */
-function ruleMarks(rules: AlertRule[], usedPercent: number): RuleMark[] {
+function ruleMarks(rules: AlertRule[], kind: RuleKind, usedPercent: number): RuleMark[] {
   const byPlace = new Map<number, AlertRule>()
   for (const rule of rules) {
     const place = 100 - rule.minLeftPercent
@@ -89,7 +94,7 @@ function ruleMarks(rules: AlertRule[], usedPercent: number): RuleMark[] {
     if (!shown || isWorseRule(rule.level, shown.level)) byPlace.set(place, rule)
   }
   return [...byPlace]
-    .map(([place, rule]) => ({ usedPercent: place, aheadPercent: place - usedPercent, rule }))
+    .map(([place, rule]) => ({ usedPercent: place, aheadPercent: place - usedPercent, rule, kind }))
     .sort((a, b) => a.usedPercent - b.usedPercent)
 }
 
@@ -106,17 +111,18 @@ function reportAccount(usage: AccountUsage, allRules: AlertRules, now: number): 
   if (usage.status === 'unavailable') return { ...usage, key }
   const rules = rulesFor(allRules, key)
   const windows = usage.windows
-    .map((window) => reportWindow(window, rules.plan, now))
+    .map((window) => reportWindow(window, rules, now))
     .sort((a, b) => b.lengthMs - a.lengthMs)
   const main = windows[0]
-  if (main?.alert) main.marks = ruleMarks(rules.plan, main.usedPercent)
+  const mainKind = main && WINDOW_RULE_KIND[main.kind]
+  if (main?.alert && mainKind) main.marks = ruleMarks(rules[mainKind], mainKind, main.usedPercent)
   const credits = usage.resetCredits
   // A reset has rules of its own: its expiry is the deadline, judged with the plan left like a window is.
   const resets = Array.from({ length: credits?.available ?? 0 }, (_, index): ResetReport => {
     const expiresAt = credits?.expiresAt[index] ?? null
     return {
       expiresAt,
-      alert: main && expiresAt !== null ? judge(expiresAt - now, leftPercent(main), rules.reset) : null,
+      alert: main && expiresAt !== null ? judge(expiresAt - now, leftPercent(main), rules[RESET_RULE_KIND]) : null,
     }
   })
   const alerts = [...windows, ...resets].map((judged) => judged.alert?.level ?? 'ok')

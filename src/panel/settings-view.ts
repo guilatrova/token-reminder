@@ -22,15 +22,20 @@ const DAY = 24 * HOUR
 const LEVELS = Object.keys(RULE_LEVEL_LABEL) as RuleLevel[]
 
 /** What each kind of rule offers and says. A reset lasts a month, a plan window a week or so. */
-const KINDS: Record<RuleKind, { hint: string; within: number[]; left: number[]; added: AlertRule }> = {
+const KINDS: Record<
+  RuleKind,
+  { hint: string; withinLabel: string; within: number[]; left: number[]; added: AlertRule }
+> = {
   plan: {
     hint: 'Warn me when a weekly reset is close and a lot is still unused. Each rule is a mark on the bar.',
+    withinLabel: 'Reset within',
     within: [6, 10, 12, 24, 48, 72, 120, 168].map((hours) => hours * HOUR),
     left: [10, 20, 30, 40, 50, 60, 70, 80, 90],
     added: { withinMs: DAY, minLeftPercent: 50, level: 'warning' },
   },
   reset: {
     hint: 'Warn me when a rate limit reset is about to expire unused.',
+    withinLabel: 'Expires within',
     within: [1, 2, 3, 5, 7, 10, 14, 21, 30].map((days) => days * DAY),
     left: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90],
     added: { withinMs: 5 * DAY, minLeftPercent: 0, level: 'warning' },
@@ -84,7 +89,7 @@ function ruleRow(
   )
   level.classList.add('level')
   const within = chip(
-    kind === 'plan' ? 'Reset within' : 'Expires within',
+    KINDS[kind].withinLabel,
     numberOptions(KINDS[kind].within, rule.withinMs, formatDuration),
     String(rule.withinMs),
     `${focus}-within`,

@@ -5,14 +5,14 @@ import { accountKey, type AccountUsage, type UsageWindow } from '../src/core/usa
 
 const HOUR = 60 * 60 * 1000
 const NOW = 1_800_000_000_000
-const PLAN_RULES = DEFAULT_ALERT_RULES.general.plan
+const RULES = DEFAULT_ALERT_RULES.general
 
 function weekly(leftPercent: number, hoursToReset: number): UsageWindow {
   return { kind: 'weekly', lengthMs: 168 * HOUR, usedPercent: 100 - leftPercent, resetsAt: NOW + hoursToReset * HOUR }
 }
 
 function levelOf(window: UsageWindow): string | undefined {
-  return evaluateAlert(window, PLAN_RULES, NOW)?.level
+  return evaluateAlert(window, RULES, NOW)?.level
 }
 
 test('a far reset is on track however much is left', () => {
@@ -31,8 +31,8 @@ test('half left two days out warns, and the worst matching rule wins', () => {
 })
 
 test('a session window and an unknown reset are not judged', () => {
-  assert.equal(evaluateAlert({ ...weekly(99, 1), kind: 'session' }, PLAN_RULES, NOW), null)
-  assert.equal(evaluateAlert({ ...weekly(99, 1), resetsAt: null }, PLAN_RULES, NOW), null)
+  assert.equal(evaluateAlert({ ...weekly(99, 1), kind: 'session' }, RULES, NOW), null)
+  assert.equal(evaluateAlert({ ...weekly(99, 1), resetsAt: null }, RULES, NOW), null)
 })
 
 test('the report puts the most pressing account first and headlines it', () => {
@@ -148,9 +148,9 @@ test('plan rules ahead of the usage are marks on the main window, and a rule wit
   assert.ok(account?.status === 'ok')
   assert.equal(account.level, 'ok')
   assert.deepEqual(
-    account.windows[0]?.marks.map((mark) => [mark.usedPercent, mark.aheadPercent, mark.rule.level]),
+    account.windows[0]?.marks.map((mark) => [mark.usedPercent, mark.aheadPercent, mark.rule.level, mark.kind]),
     // The place at 10% used is behind the 40% already used, so its mark is gone.
-    [[60, 20, 'warning']],
+    [[60, 20, 'warning', 'plan']],
   )
 })
 

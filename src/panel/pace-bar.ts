@@ -34,7 +34,7 @@ export function paceBar(window: WindowReport, big: boolean, animate: boolean): H
       'span',
       'tip mark-tip',
       el('b', '', `${percent(mark.aheadPercent)} to go`),
-      el('span', '', `${RULE_LEVEL_LABEL[mark.rule.level]}: ${describeRule(mark.rule, 'plan')}`),
+      el('span', '', `${RULE_LEVEL_LABEL[mark.rule.level]}: ${describeRule(mark.rule, mark.kind)}`),
     )
     about.style.left = `${mark.usedPercent}%`
     about.style.transform = `translateX(-${mark.usedPercent}%)`

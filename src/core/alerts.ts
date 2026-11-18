@@ -92,7 +92,7 @@ export function parseAlertRules(value: unknown): AlertRules | null {
 /** The rules one account is judged by. */
 export function rulesFor(rules: AlertRules, accountKey: string): RuleSet {
   const own = rules.accounts[accountKey]
-  return { plan: own?.plan ?? rules.general.plan, reset: own?.reset ?? rules.general.reset }
+  return Object.fromEntries(RULE_KINDS.map((kind) => [kind, own?.[kind] ?? rules.general[kind]])) as RuleSet
 }
 
 /**
@@ -118,8 +118,14 @@ export function withRuleList(
   return { ...rules, accounts }
 }
 
-/** The session window resets every few hours, so losing its leftover is routine, not news. */
-const TRACKED_KINDS: WindowKind[] = ['weekly', 'monthly']
+/**
+ * Which rules judge each kind of window. A kind that is absent is not judged: the session window
+ * resets every few hours, so losing its leftover is routine, not news.
+ */
+export const WINDOW_RULE_KIND: Partial<Record<WindowKind, RuleKind>> = { weekly: 'plan', monthly: 'plan' }
+
+/** Which rules judge a rate limit reset by its expiry. */
+export const RESET_RULE_KIND: RuleKind = 'reset'
 
 const SEVERITY: Record<AlertLevel | RuleLevel, number> = { ok: 0, mark: 0, warning: 1, urgent: 2 }
 
@@ -141,9 +147,10 @@ export function judge(untilMs: number, leftPercent: number, rules: AlertRule[]):
 }
 
 /** Null when the window is not judged: an untracked kind, or a reset time nobody reported. */
-export function evaluateAlert(window: UsageWindow, rules: AlertRule[], now: number): Alert | null {
-  if (!TRACKED_KINDS.includes(window.kind) || window.resetsAt === null) return null
-  return judge(window.resetsAt - now, leftPercent(window), rules)
+export function evaluateAlert(window: UsageWindow, rules: RuleSet, now: number): Alert | null {
+  const kind = WINDOW_RULE_KIND[window.kind]
+  if (kind === undefined || window.resetsAt === null) return null
+  return judge(window.resetsAt - now, leftPercent(window), rules[kind])
 }
 
 /** "2d", "10h", "1d 4h": the two largest units, enough for a rule or a tooltip. */
