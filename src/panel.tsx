@@ -1,31 +1,24 @@
 // The panel only draws the report the worker builds; every rule lives in src/core.
 import {
   atom,
-  Badge,
-  Callout,
-  Card,
-  Collapsible,
+  Box,
   EmptyState,
   env,
   Heading,
   IconButton,
   plugin,
   read,
-  RelativeTime,
   Row,
+  Separator,
   set,
-  Spinner,
   Stack,
-  Table,
   Text,
   type PanelContext,
-  type TableColumn,
-  type TableRow,
 } from 'orca'
-import { describeRule } from './core/alerts'
+import { formatDuration, type AlertLevel } from './core/alerts'
 import type { AccountReport, UsageReport } from './core/report'
 import { leftPercent } from './core/usage'
-import { LEVEL_LABEL, LEVEL_TONE, WINDOW_LABEL } from './tones'
+import { LEVEL_TONE, WINDOW_LABEL } from './tones'
 import './protocol'
 
 const report = atom<UsageReport | null>(null)
@@ -50,98 +43,68 @@ export function setup(ctx: PanelContext): void {
   void refresh()
 }
 
-function formatDate(at: number): string {
-  return new Date(at).toLocaleString(env.locale, {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
-}
+/** One thing that runs out: a plan window or a reset that can still be redeemed. */
+type Deadline = { key: string; label: string; endsAt: number | null; value: string; level: AlertLevel }
 
-/** One line per thing that runs out: each plan window, then each reset that can still be redeemed. */
-function deadlineRows(account: Extract<AccountReport, { status: 'ok' }>): TableRow[] {
-  const cells = (what: string, left: string, at: number | null) => ({
-    what,
-    left,
-    when: at === null ? 'Unknown' : formatDate(at),
-    remaining: at === null ? null : ({ type: 'relative', at, format: 'duration' } as const),
-  })
+function deadlines(account: Extract<AccountReport, { status: 'ok' }>): Deadline[] {
   const windows = account.windows.map((window) => ({
     key: window.kind,
-    cells: cells(`${WINDOW_LABEL[window.kind]} limit`, `${Math.round(leftPercent(window))}%`, window.resetsAt),
+    label: WINDOW_LABEL[window.kind],
+    endsAt: window.resetsAt,
+    value: `${Math.round(leftPercent(window))}%`,
+    level: window.alert?.level ?? 'ok',
   }))
   const credits = account.resetCredits
   const resets = Array.from({ length: credits?.available ?? 0 }, (_, index) => ({
     key: `reset-${index}`,
-    cells: cells(`Reset ${index + 1}`, 'Unused', credits?.expiresAt[index] ?? null),
+    label: 'Reset',
+    endsAt: credits?.expiresAt[index] ?? null,
+    value: '',
+    level: 'ok' as const,
   }))
   return [...windows, ...resets]
 }
 
-const DEADLINE_COLUMNS: TableColumn[] = [
-  { key: 'what', label: 'What', minWidth: 'sm' },
-  { key: 'left', label: 'Left', align: 'end' },
-  { key: 'when', label: 'Ends', hideBelow: 'sm' },
-  { key: 'remaining', label: 'Time left', align: 'end' },
-]
+function formatDay(at: number): string {
+  return new Date(at).toLocaleDateString(env.locale, { month: 'short', day: 'numeric' })
+}
 
-function AccountCard({ account }: { account: AccountReport }) {
-  const title = account.status === 'ok' && account.plan ? `${account.provider} · ${account.plan}` : account.provider
-  if (account.status === 'unavailable') {
-    return (
-      <Card title={title} description={account.account ?? undefined}>
-        <Callout tone="warning" title="Usage unavailable">
-          <Text size="sm">{account.detail}</Text>
-        </Callout>
-      </Card>
-    )
-  }
-  const alerting = account.windows.filter((window) => window.alert?.rule)
+function DeadlineRow({ deadline, now }: { deadline: Deadline; now: number }) {
+  const { endsAt, level } = deadline
   return (
-    <Card title={title} description={account.account ?? undefined}>
-      <Stack gap="sm">
-        <Row>
-          <Badge tone={LEVEL_TONE[account.level]}>{LEVEL_LABEL[account.level]}</Badge>
-        </Row>
-        {alerting.map((window) => (
-          <Text key={window.kind} size="xs" tone={LEVEL_TONE[window.alert?.level ?? 'ok']}>
-            {`${WINDOW_LABEL[window.kind]}: ${window.alert?.rule ? describeRule(window.alert.rule) : ''}`}
+    <Row justify="between" gap="sm">
+      <Text size="sm">
+        {deadline.label}
+        {endsAt === null ? null : <Text muted>{` · ${formatDay(endsAt)}`}</Text>}
+      </Text>
+      <Row gap="sm">
+        <Text size="sm" muted>
+          {endsAt === null ? 'unknown' : formatDuration(endsAt - now)}
+        </Text>
+        <Box width={40} align="end">
+          <Text size="sm" weight="semibold" tone={level === 'ok' ? undefined : LEVEL_TONE[level]}>
+            {deadline.value}
           </Text>
-        ))}
-        <Table
-          label={`${title} deadlines`}
-          columns={DEADLINE_COLUMNS}
-          rows={deadlineRows(account)}
-          emptyText="This plan reports no usage window."
-          maxHeight="none"
-        />
-      </Stack>
-    </Card>
+        </Box>
+      </Row>
+    </Row>
   )
 }
 
-function Accounts({ current }: { current: UsageReport }) {
-  if (current.accounts.length === 0) {
-    return (
-      <EmptyState icon="agent" title="No logins found" description="Add an account in Orca to see its usage here." />
-    )
-  }
+function Account({ account, now }: { account: AccountReport; now: number }) {
   return (
-    <Stack gap="md">
-      {current.accounts.map((account, index) => (
-        <AccountCard key={`${account.provider}:${account.account ?? index}`} account={account} />
-      ))}
-      <Collapsible title="Alert rules" description="Weekly and monthly windows; the worst match wins.">
-        <Stack gap="xs">
-          {current.rules.map((rule) => (
-            <Row key={describeRule(rule)} gap="sm">
-              <Badge tone={LEVEL_TONE[rule.level]}>{LEVEL_LABEL[rule.level]}</Badge>
-              <Text size="sm">{describeRule(rule)}</Text>
-            </Row>
-          ))}
-        </Stack>
-      </Collapsible>
+    <Stack gap="xs">
+      <Text weight="semibold">
+        {account.provider}
+        {account.status === 'ok' && account.plan ? <Text muted weight="regular">{` ${account.plan}`}</Text> : null}
+      </Text>
+      {account.status === 'unavailable' ? (
+        <Text size="sm" tone="warning">
+          {account.detail}
+        </Text>
+      ) : (
+        deadlines(account).map((deadline) => <DeadlineRow key={deadline.key} deadline={deadline} now={now} />)
+      )}
     </Stack>
   )
 }
@@ -152,24 +115,23 @@ export default function Panel() {
   return (
     <Stack gap="md">
       <Row justify="between">
-        <Heading>Unused plan</Heading>
-        <Row gap="xs">
-          {read(loading) ? <Spinner label="Reading usage" labelHidden /> : null}
-          <IconButton icon="refresh" label="Refresh" variant="ghost" disabled={read(loading)} onPress={refresh} />
-        </Row>
+        <Heading>
+          Unused <Text muted>· left</Text>
+        </Heading>
+        <IconButton icon="refresh" label="Refresh" variant="ghost" disabled={read(loading)} onPress={refresh} />
       </Row>
       {error ? (
-        <Callout tone="danger" title="Could not read usage">
-          <Text size="sm">{error}</Text>
-        </Callout>
-      ) : null}
-      {current ? <Accounts current={current} /> : null}
-      {current ? (
-        <Text muted size="xs">
-          {'Updated '}
-          <RelativeTime at={current.readAt} format="short" />
+        <Text size="sm" tone="danger">
+          {error}
         </Text>
       ) : null}
+      {current?.accounts.length === 0 ? (
+        <EmptyState icon="agent" title="No accounts" description="Add an account in Orca to see it here." />
+      ) : null}
+      {current?.accounts.flatMap((account, index) => [
+        <Separator key={`separator-${index}`} />,
+        <Account key={`${account.provider}:${account.account ?? index}`} account={account} now={current.readAt} />,
+      ])}
     </Stack>
   )
 }
