@@ -4,6 +4,8 @@ import { build } from 'esbuild'
 import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises'
 
 const out = '.orca/preview'
+const tiboDebug = process.argv.includes('--tibo')
+const filename = tiboDebug ? 'tibo.html' : 'index.html'
 // One self-contained page: a browser will not load module files from disk.
 const bundle = await build({
   entryPoints: ['test/preview/entry.ts'],
@@ -31,7 +33,7 @@ const THEME = `
 await mkdir(out, { recursive: true })
 await copyFile('src/panel/tibo.jpg', `${out}/tibo.jpg`)
 await writeFile(
-  `${out}/index.html`,
+  `${out}/${filename}`,
   `<!doctype html>
 <html>
   <head>
@@ -40,10 +42,16 @@ await writeFile(
     <style>${css}</style>
   </head>
   <body>
+    ${
+      tiboDebug
+        ? `<style>body{max-width:420px;margin:auto}fieldset{display:flex;flex-wrap:wrap;gap:5px;margin:14px 16px;padding:8px;border:1px solid var(--orca-border);border-radius:8px}legend{color:var(--orca-muted-foreground)}button[aria-pressed="true"]{background:var(--orca-foreground);color:var(--orca-background)}</style>
+    <fieldset id="milestones"><legend>Simulated weekly usage</legend></fieldset>`
+        : ''
+    }
     <div id="root"></div>
     <script type="module">${script}</script>
   </body>
 </html>
 `,
 )
-console.log(`Preview built: ${out}/index.html?scenario=<name>&theme=dark|light`)
+console.log(`Preview built: ${out}/${filename}`)

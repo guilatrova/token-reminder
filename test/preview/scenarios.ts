@@ -104,11 +104,14 @@ const RULES: Record<string, AlertRules> = {
 export const scenarioNames = Object.keys(SCENARIOS)
 
 /** Answers the panel's requests the way src/app.ts does, from the named scenario. */
-export function fakeWorker(name: string): (request: string, input?: unknown) => Promise<UsageReport | Preferences> {
+export function fakeWorker(
+  name: string,
+  simulatedUsage?: () => number,
+): (request: string, input?: unknown) => Promise<UsageReport | Preferences> {
   const scenario = SCENARIOS[name]
   if (scenario === undefined) throw new Error(`Unknown scenario "${name}". Known: ${scenarioNames.join(', ')}`)
   let rules = RULES[name] ?? DEFAULT_ALERT_RULES
-  let tiboReset = false
+  let tiboReset = !!simulatedUsage
   let preferences = DEFAULT_PREFERENCES
   return async (request, input) => {
     if (scenario === 'loading') return new Promise(() => {})
@@ -125,6 +128,7 @@ export function fakeWorker(name: string): (request: string, input?: unknown) => 
       if (!parsed) throw new Error('Those alert rules are not valid.')
       rules = parsed
     }
-    return buildReport(scenario, rules, Date.now(), tiboReset)
+    const accounts = simulatedUsage ? [account('Codex', 'pro', [weekly(100 - simulatedUsage(), 3 * DAY)])] : scenario
+    return buildReport(accounts, rules, Date.now(), tiboReset)
   }
 }
