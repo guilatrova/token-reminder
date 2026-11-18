@@ -1,14 +1,11 @@
 // What the status bar item says about a report: one line for the most pressing window, and
 // every account in the tooltip.
-import { formatDuration, type AlertLevel } from './core/alerts'
+import { formatDuration } from './core/alerts'
 import { headline, type AccountReport, type UsageReport, type WindowReport } from './core/report'
-import { leftPercent, type WindowKind } from './core/usage'
+import { leftPercent } from './core/usage'
+import { LEVEL_LABEL, LEVEL_TONE, WINDOW_LABEL } from './tones'
 
 export type StatusBarView = { text: string; tone: 'neutral' | 'warning' | 'danger'; tooltip: string }
-
-const LEVEL_TONE: Record<AlertLevel, StatusBarView['tone']> = { ok: 'neutral', warning: 'warning', urgent: 'danger' }
-const LEVEL_LABEL: Record<AlertLevel, string> = { ok: 'On track', warning: 'Spend soon', urgent: 'Spend now' }
-const WINDOW_LABEL: Record<WindowKind, string> = { session: 'Session', weekly: 'Weekly', monthly: 'Monthly' }
 
 function untilText(at: number | null, now: number): string {
   return at === null ? 'unknown' : formatDuration(at - now)
@@ -26,7 +23,9 @@ function accountLines(account: AccountReport, now: number): string[] {
   const lines = account.windows.map((window) => windowLine(window, now))
   const credits = account.resetCredits
   if (credits && credits.available > 0) {
-    lines.push(`Resets available: ${credits.available}, next expires in ${untilText(credits.nextExpiresAt, now)}`)
+    lines.push(
+      `Resets available: ${credits.available}, next expires in ${untilText(credits.expiresAt[0] ?? null, now)}`,
+    )
   }
   return [account.plan ? `${name} (${account.plan})` : name, ...lines.map((line) => `  ${line}`)]
 }
@@ -40,5 +39,6 @@ export function statusBarView(report: UsageReport): StatusBarView {
     return { text, tone: 'neutral', tooltip: tooltip || 'No account managed by Orca was found.' }
   }
   const text = `${top.provider} ${Math.round(top.leftPercent)}% left · ${formatDuration(top.resetsAt - now)}`
-  return { text, tone: LEVEL_TONE[top.level], tooltip }
+  // On track stays neutral so the item blends in until something needs spending.
+  return { text, tone: top.level === 'ok' ? 'neutral' : LEVEL_TONE[top.level], tooltip }
 }

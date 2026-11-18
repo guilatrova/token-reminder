@@ -19,31 +19,31 @@ const reading = (leftPercent: number, hoursToReset: number, resets = 0): Account
   account: 'person@example.com',
   plan: 'pro',
   windows: [{ kind: 'weekly', usedPercent: 100 - leftPercent, resetsAt: Date.now() + hoursToReset * HOUR }],
-  resetCredits: { available: resets, nextExpiresAt: resets ? Date.now() + 300 * HOUR : null },
+  resetCredits: { available: resets, expiresAt: resets ? [Date.now() + 300 * HOUR] : [] },
 })
 
-test('shows the most pressing window, and pressing the item answers every account', async () => {
+const lastStatusBar = (worker: Awaited<ReturnType<typeof mountWorker>>) =>
+  worker.host.callsOf('statusBar.update').at(-1)
+
+test('answers the panel, posts the report and puts the most pressing window in the status bar', async () => {
   const worker = await mountWorker(
     workerWith({ Alpha: memoryUsage([reading(90, 150, 2)]), Beta: memoryUsage([reading(80, 12)]) }),
   )
-  const details = await worker.command('token-reminder.refresh')
-  assert.deepEqual(worker.host.callsOf('statusBar.update').at(-1), {
+  const report = await worker.request('usage.read')
+  assert.deepEqual(worker.posts.at(-1), { event: 'usage.changed', payload: report })
+  assert.deepEqual(lastStatusBar(worker), {
     id: 'unused-plan',
     visible: true,
     text: 'Beta 80% left · 12h',
     tone: 'danger',
-    tooltip: details,
-  })
-  assert.equal(
-    details,
-    [
+    tooltip: [
       'Beta person@example.com (pro)',
       '  Weekly: 80% left, resets in 12h (Spend now)',
       'Alpha person@example.com (pro)',
       '  Weekly: 90% left, resets in 6d 6h (On track)',
       '  Resets available: 2, next expires in 12d 12h',
     ].join('\n'),
-  )
+  })
   assert.deepEqual(worker.refusals, [])
   await worker.deactivate()
 })
@@ -51,24 +51,24 @@ test('shows the most pressing window, and pressing the item answers every accoun
 test('stays neutral when on track, and one failing provider does not hide another', async () => {
   const broken: UsageSource = { read: () => Promise.reject(new Error('disk on fire')) }
   const worker = await mountWorker(workerWith({ Alpha: memoryUsage([reading(90, 150)]), Beta: broken }))
-  const details = await worker.command('token-reminder.refresh')
-  const shown = worker.host.callsOf('statusBar.update').at(-1)
-  assert.deepEqual(shown, {
-    id: 'unused-plan',
-    visible: true,
-    text: 'Alpha 90% left · 6d 6h',
-    tone: 'neutral',
-    tooltip: details,
-  })
-  assert.match(String(details), /Beta: unavailable\. disk on fire/)
+  const report = await worker.request('usage.read')
+  assert.deepEqual(
+    report.accounts.map((account) => [account.provider, account.status]),
+    [
+      ['Alpha', 'ok'],
+      ['Beta', 'unavailable'],
+    ],
+  )
+  const shown = lastStatusBar(worker) as { text: string; tone: string; tooltip: string }
+  assert.deepEqual([shown.text, shown.tone], ['Alpha 90% left · 6d 6h', 'neutral'])
+  assert.match(shown.tooltip, /Beta: unavailable\. disk on fire/)
   await worker.deactivate()
 })
 
 test('says so when Orca manages no account', async () => {
   const worker = await mountWorker(workerWith({ Alpha: memoryUsage([]) }))
-  await worker.command('token-reminder.refresh')
-  const shown = worker.host.callsOf('statusBar.update').at(-1)
-  assert.deepEqual(shown, {
+  await worker.request('usage.read')
+  assert.deepEqual(lastStatusBar(worker), {
     id: 'unused-plan',
     visible: true,
     text: 'No accounts',

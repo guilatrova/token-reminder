@@ -20,7 +20,7 @@ function fakeFetch(routes: Record<string, { status?: number; body?: unknown }>, 
 
 const files = (entries: Record<string, string>) => async (path: string) => entries[path] ?? null
 
-test('maps the plan window and the soonest available reset expiry', async () => {
+test('maps the plan window and when each available reset expires', async () => {
   const source = codexUsage({
     homes: ['/a', '/missing'],
     readFile: files({ '/a/auth.json': login('acc-1', 'person@example.com') }),
@@ -32,19 +32,22 @@ test('maps the plan window and the soonest available reset expiry', async () => 
       status: 'ok',
       plan: 'pro',
       windows: [{ kind: 'weekly', usedPercent: 15, resetsAt: 1_800_000_000_000 }],
-      resetCredits: { available: 2, nextExpiresAt: Date.parse('2027-01-20T00:00:00Z') },
+      resetCredits: {
+        available: 2,
+        expiresAt: [Date.parse('2027-01-20T00:00:00Z'), Date.parse('2027-02-01T00:00:00Z')],
+      },
     },
   ])
 })
 
-test('keeps the reset count with an unknown expiry when the detail call fails', async () => {
+test('keeps the reset count with unknown expiries when the detail call fails', async () => {
   const source = codexUsage({
     homes: ['/a'],
     readFile: files({ '/a/auth.json': login('acc-1', 'person@example.com') }),
     fetch: fakeFetch({ '/usage': { body: usage } }),
   })
   const [reading] = await source.read()
-  assert.deepEqual(reading?.status === 'ok' && reading.resetCredits, { available: 2, nextExpiresAt: null })
+  assert.deepEqual(reading?.status === 'ok' && reading.resetCredits, { available: 2, expiresAt: [] })
 })
 
 test('reads each account once and reports a rejected login as unavailable', async () => {

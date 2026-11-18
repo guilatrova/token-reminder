@@ -15,8 +15,8 @@ export type UsageWindow = {
 /** Refills of the plan window the account earned and may still redeem. */
 export type ResetCredits = {
   available: number
-  /** Epoch ms of the soonest expiry; null when unknown. */
-  nextExpiresAt: number | null
+  /** Epoch ms when each available reset expires, soonest first; shorter than `available` when some are unknown. */
+  expiresAt: number[]
 }
 
 export type UnavailableReason = 'login-expired' | 'network' | 'unexpected-response'

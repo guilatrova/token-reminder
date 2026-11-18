@@ -76,13 +76,13 @@ function parseWindow(raw: unknown): UsageWindow | null {
   }
 }
 
-function soonestAvailableExpiry(payload: unknown): number | null {
+function availableExpiries(payload: unknown): number[] {
   const credits = isRecord(payload) && Array.isArray(payload.credits) ? payload.credits : []
-  const expiries = credits
+  return credits
     .filter((credit) => isRecord(credit) && credit.status === 'available')
     .map((credit) => (isRecord(credit) && typeof credit.expires_at === 'string' ? Date.parse(credit.expires_at) : NaN))
     .filter((expiresAt) => Number.isFinite(expiresAt))
-  return expiries.length ? Math.min(...expiries) : null
+    .sort((a, b) => a - b)
 }
 
 class RequestFailed extends Error {
@@ -121,10 +121,10 @@ export function codexUsage(config: CodexConfig): UsageSource {
     const summary = usage.rate_limit_reset_credits
     const available = isRecord(summary) ? finite(summary.available_count) : null
     if (available === null) return null
-    if (available <= 0) return { available: 0, nextExpiresAt: null }
-    // The expiry is optional detail: without it the count still shows, with the expiry unknown.
+    if (available <= 0) return { available: 0, expiresAt: [] }
+    // The expiries are optional detail: without them the count still shows, with the dates unknown.
     const details = await getJson(RESET_CREDITS_URL, login).catch(() => null)
-    return { available, nextExpiresAt: soonestAvailableExpiry(details) }
+    return { available, expiresAt: availableExpiries(details) }
   }
 
   async function readAccount(login: Login): Promise<AccountReading> {
