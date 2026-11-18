@@ -111,6 +111,15 @@ select {
   font-size: 10px;
   font-weight: 700;
 }
+.avatar.mark svg,
+.avatar.mark img {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+.avatar.mark img {
+  border-radius: 3px;
+}
 .who {
   display: flex;
   align-items: baseline;

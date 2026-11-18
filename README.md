@@ -50,3 +50,8 @@ npm run preview               # the panel against test/preview/scenarios.ts, out
 
 `orca plugin dev watch` loads the folder into your Orca and reloads it on every save. The plugin runs a Node worker
 with your user account's access, so Orca asks you to approve it once.
+
+## Credits
+
+The provider marks in the panel are the ones [Orca](https://github.com/stablyai/orca) (MIT) draws in its usage meter.
+They belong to their owners and are used only to name the provider.

@@ -55,7 +55,8 @@ One `<button aria-expanded>` per account, a grid of seven cells:
 
 `avatar 22px | name and plan | bar (1fr, min 48px) | tanks | % left 38px | time 50px | chevron 12px`
 
-- **Avatar**: the first two letters of the provider, `10px/700`, on the quiet fill with a hairline border.
+- **Avatar**: the provider's own mark at `14px`, the same ones Orca's usage meter shows, on the quiet fill with a
+  hairline border. A provider without a mark shows its first two letters, `10px/700`.
 - **Name and plan**: plan in secondary text, as the provider spells it.
 - **Bar** (`6px` high in the row): only while the account is closed. See "The pace bar".
 - **Tanks**: one `9 x 12px` block per unused reset, coloured by that reset's own level; neutral (secondary text
