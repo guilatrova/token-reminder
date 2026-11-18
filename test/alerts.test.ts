@@ -28,6 +28,8 @@ test('half left three days out warns, and the worst matching rule wins', () => {
   assert.equal(levelOf(weekly(60, 20)), 'warning')
   assert.equal(levelOf(weekly(70, 72)), 'urgent')
   assert.equal(levelOf(weekly(92, 9)), 'urgent')
+  assert.equal(levelOf(weekly(90, 6)), 'critical')
+  assert.equal(levelOf(weekly(89, 6)), 'urgent')
 })
 
 test('a session window and an unknown reset are not judged', () => {
@@ -68,7 +70,7 @@ test('a reset is judged by the reset rules, colours the account and is what it c
     account: null,
     plan: null,
     windows: [{ kind: 'session', lengthMs: 5 * HOUR, usedPercent: 10, resetsAt: NOW + HOUR }, weekly(60, 98)],
-    resetCredits: { available: 3, expiresAt: [NOW + 30 * HOUR, NOW + 288 * HOUR] },
+    resetCredits: { available: 4, expiresAt: [NOW + 30 * HOUR, NOW + 168 * HOUR, NOW + 288 * HOUR] },
   }
   const report = buildReport([usage], DEFAULT_ALERT_RULES, NOW)
   const [account] = report.accounts
@@ -83,7 +85,7 @@ test('a reset is judged by the reset rules, colours the account and is what it c
   assert.equal(Math.round(account.windows[0]?.atRiskPercent ?? -1), 2)
   assert.deepEqual(
     account.resets.map((reset) => reset.alert?.level),
-    ['critical', 'warning', undefined],
+    ['critical', 'urgent', 'warning', undefined],
   )
   assert.equal(account.level, 'critical')
   assert.deepEqual(spendCalls(report), [
