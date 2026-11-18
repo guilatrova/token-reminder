@@ -87,7 +87,8 @@ The bar is the window, read left to right as both the plan and the clock:
 - **Rule marks**: each plan rule of the account is a `2px` dashed vertical line, as tall as the bar's `14px` box, at
   the share used where the rule stops matching (a rule with "≥ 50% left" sits at 50% used). It takes the rule's
   colour; a rule with no colour is drawn in secondary text colour. Rules at the same place show as one mark, the most
-  severe. Pointing at a mark names the rule: "Yellow: ≤ 2d to reset, ≥ 50% left". Reset rules draw no marks.
+  severe. Pointing at a mark names the rule: "Yellow: ≤ 2d to reset, ≥ 50% left". A mark the fill has reached disappears: that rule can no
+  longer match in this window. Reset rules draw no marks.
 - With an unknown reset time there is no tick, no hatch and no marks.
 - The fill grows from 0 in `0.7s`; the hatch fades in after it. No motion under `prefers-reduced-motion`.
 

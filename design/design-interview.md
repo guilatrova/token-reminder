@@ -102,3 +102,5 @@ Unprompted, then four decisions answered in a plan (all as proposed):
   the bar; "No colour" is a rule that only marks.
 - "weekly reset e rate limit reset - sao grupos de regras diferentes." Two groups, with their own built-in rules
   (reset: yellow at ≤ 10d, red at ≤ 5d). Reset rules draw no marks. The status bar names the reset when it alerts.
+- "Quando a barra já ultrapassou um 'rate limit' antigo, aquela barra tracejada pode desaparecer." A mark the fill
+  has reached is no longer drawn.

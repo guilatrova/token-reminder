@@ -137,7 +137,7 @@ test('an account with rules of its own is judged by them instead of the general 
   assert.deepEqual(followsAgain, DEFAULT_ALERT_RULES)
 })
 
-test('plan rules are marks on the main window, and a rule with no colour never alerts', () => {
+test('plan rules ahead of the usage are marks on the main window, and a rule with no colour never alerts', () => {
   const plan: AlertRule[] = [
     { withinMs: 100 * HOUR, minLeftPercent: 40, level: 'mark' },
     { withinMs: 10 * HOUR, minLeftPercent: 40, level: 'warning' },
@@ -149,10 +149,8 @@ test('plan rules are marks on the main window, and a rule with no colour never a
   assert.equal(account.level, 'ok')
   assert.deepEqual(
     account.windows[0]?.marks.map((mark) => [mark.usedPercent, mark.rule.level]),
-    [
-      [10, 'urgent'],
-      [60, 'warning'],
-    ],
+    // The place at 10% used is behind the 40% already used, so its mark is gone.
+    [[60, 'warning']],
   )
 })
 

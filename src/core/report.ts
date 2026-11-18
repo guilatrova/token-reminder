@@ -21,7 +21,7 @@ export type WindowReport = UsageWindow & {
   timeLeftPercent: number | null
   /** Plan left beyond the time left: what is on course to go unused. Null when the reset time is unknown. */
   atRiskPercent: number | null
-  /** The account's plan rules as places on the bar, left to right. Only the main window has them. */
+  /** The account's plan rules still ahead of the usage, as places on the bar, left to right. Only the main window has them. */
   marks: RuleMark[]
 }
 
@@ -71,13 +71,17 @@ function reportWindow(window: UsageWindow, rules: AlertRule[], now: number): Win
   return { ...window, alert: evaluateAlert(window, rules, now), timeLeftPercent, atRiskPercent, marks: [] }
 }
 
-/** One mark per place on the bar; where rules share a place, the most severe one is shown. */
-function ruleMarks(rules: AlertRule[]): RuleMark[] {
+/**
+ * One mark per place on the bar; where rules share a place, the most severe one is shown.
+ * A place the usage has already reached has no mark: that rule can no longer match in this window.
+ */
+function ruleMarks(rules: AlertRule[], usedPercent: number): RuleMark[] {
   const byPlace = new Map<number, AlertRule>()
   for (const rule of rules) {
-    const usedPercent = 100 - rule.minLeftPercent
-    const shown = byPlace.get(usedPercent)
-    if (!shown || isWorseRule(rule.level, shown.level)) byPlace.set(usedPercent, rule)
+    const place = 100 - rule.minLeftPercent
+    if (place <= usedPercent) continue
+    const shown = byPlace.get(place)
+    if (!shown || isWorseRule(rule.level, shown.level)) byPlace.set(place, rule)
   }
   return [...byPlace]
     .map(([usedPercent, rule]) => ({ usedPercent, rule }))
@@ -100,7 +104,7 @@ function reportAccount(usage: AccountUsage, allRules: AlertRules, now: number): 
     .map((window) => reportWindow(window, rules.plan, now))
     .sort((a, b) => b.lengthMs - a.lengthMs)
   const main = windows[0]
-  if (main?.alert) main.marks = ruleMarks(rules.plan)
+  if (main?.alert) main.marks = ruleMarks(rules.plan, main.usedPercent)
   const credits = usage.resetCredits
   // A reset has rules of its own: its expiry is the deadline, judged with the plan left like a window is.
   const resets = Array.from({ length: credits?.available ?? 0 }, (_, index): ResetReport => {
