@@ -136,6 +136,17 @@ select {
   height: 18px;
   display: block;
 }
+.avatar.small {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  font-size: 8px;
+}
+.avatar.small.mark svg,
+.avatar.small.mark img {
+  width: 14px;
+  height: 14px;
+}
 /* A bitmap mark is black on white: blended so only the glyph shows, in the text colour of either theme. */
 .avatar.mark img {
   mix-blend-mode: multiply;
@@ -539,6 +550,39 @@ select {
 .settings-section {
   padding-top: 18px;
 }
+/* The first one starts where the account list does, so the bar above reads the same on both screens. */
+.settings-head + .settings-section {
+  padding-top: 8px;
+}
+
+/* A label with its explanation on demand. */
+.hinted {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.hinted > .icon {
+  width: 11px;
+  height: 11px;
+  color: var(--faint);
+}
+.hint-tip {
+  top: calc(100% + 5px);
+  bottom: auto;
+  left: 0;
+  transform: none;
+  width: max-content;
+  max-width: min(250px, 75vw);
+  font-weight: 400;
+  white-space: normal;
+  text-align: left;
+  z-index: 2;
+}
+.hinted:hover .hint-tip,
+.setting:focus-visible .hint-tip {
+  opacity: 1;
+}
 .section-head {
   display: flex;
   align-items: center;
@@ -571,16 +615,25 @@ select {
 }
 .scope {
   all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   max-width: 100%;
   padding: 3px 8px;
   border-radius: 7px;
   font-size: 12px;
   font-weight: 600;
   color: var(--orca-muted-foreground);
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
   cursor: pointer;
+}
+.scope > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.scope .avatar {
+  flex: none;
 }
 .scope:hover {
   color: var(--orca-foreground);
@@ -685,7 +738,8 @@ select {
   all: unset;
   display: block;
   width: fit-content;
-  margin-top: 8px;
+  /* On the right, under the add button: both act on the whole group. */
+  margin: 8px 0 0 auto;
   font-size: 11px;
   color: var(--faint);
   cursor: pointer;
@@ -720,16 +774,8 @@ select {
   outline: 2px solid var(--orca-ring);
   outline-offset: 2px;
 }
-.setting-text {
-  display: grid;
-  gap: 1px;
-}
 .setting-title {
   font-weight: 600;
-}
-.setting-hint {
-  font-size: 12px;
-  color: var(--orca-muted-foreground);
 }
 .switch {
   flex: none;

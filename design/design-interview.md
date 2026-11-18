@@ -106,3 +106,15 @@ Unprompted, then four decisions answered in a plan (all as proposed):
   has passed is no longer drawn.
 - "passar o mouse em cima da barra tracejada visivel, aumenta/engorda ela e exibe a marcacao no tooltip (quantos %
   praquele limite)." A mark thickens on hover and its tooltip says how far the usage is from it, then the rule.
+
+## Q7. Settings, second pass
+
+Seven notes on the settings running in Orca, all applied:
+
+- "a barra superior do settings tem que ter a mesma altura da barra superior do panel principal." Same `26px` bar;
+  the first section now starts where the account list does.
+- "status bar deve ser a primeira config no panel já que nunca muda - animar a entrada/saida do menu antigo pra ficar
+  bonito sem piscar a tela toda." The switch is first; tabs and screens hand over with a short fade.
+- "as ias devem ter icones como ja reusamos na pagina inicial." Provider marks on the tabs.
+- "Plan Reset -> Weekly reset", "Alinhar restore defaults à direita", "Title do 'Status Bar': poderia ser 'General'",
+  "as descriptions poderiam ser uma tooltip." Done as said.

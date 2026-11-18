@@ -2,18 +2,10 @@
 import type { AccountReport, OkAccountReport } from '../core/report'
 import { leftPercent } from '../core/usage'
 import { accountDetail } from './account-detail'
+import { avatar } from './avatar'
 import { el, icon } from './dom'
 import { percent, shortDate, timeLeft, type ViewContext } from './format'
 import { paceBar } from './pace-bar'
-import { PROVIDER_MARKS } from './provider-marks'
-
-function avatar(provider: string): HTMLElement {
-  const mark = PROVIDER_MARKS[provider.toLowerCase()]
-  if (!mark) return el('span', 'avatar', provider.slice(0, 2))
-  const node = el('span', 'avatar mark')
-  node.innerHTML = mark // our own static markup, no data
-  return node
-}
 
 function tanks(account: OkAccountReport, ctx: ViewContext): HTMLElement {
   return el(

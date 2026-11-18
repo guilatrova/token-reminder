@@ -29,6 +29,24 @@ function render() {
   if (focusKey) root?.querySelector<HTMLElement>(`[data-focus="${CSS.escape(focusKey)}"]`)?.focus()
 }
 
+/**
+ * Changes what is on screen with a short hand-over instead of a cut: the part named by `selector`
+ * fades out, the state changes, and the part that replaces it fades in. Nothing else on screen moves.
+ */
+async function swap(selector: string, change: () => void) {
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const leaving = still ? null : root?.querySelector(selector)
+  if (leaving) {
+    await leaving.animate({ opacity: [1, 0] }, { duration: 90, easing: 'ease-in', fill: 'forwards' }).finished
+  }
+  change()
+  render()
+  if (still) return
+  root
+    ?.querySelector(selector)
+    ?.animate({ opacity: [0, 1], transform: ['translateY(4px)', 'none'] }, { duration: 160, easing: 'ease-out' })
+}
+
 /** Asks the worker for something and keeps the answer; a failure leaves what was on screen and says why. */
 let pending = 0
 
@@ -56,18 +74,9 @@ const actions: Actions = {
   saveRules: (rules: AlertRules) => run(() => orca.plugin.request('rules.save', { rules }), keepReport),
   savePreferences: (preferences: Preferences) =>
     run(() => orca.plugin.request('preferences.save', preferences), keepPreferences),
-  showScope: (accountKey) => {
-    state.scope = accountKey
-    render()
-  },
-  showSettings: () => {
-    state.view = 'settings'
-    render()
-  },
-  showAccounts: () => {
-    state.view = 'accounts'
-    render()
-  },
+  showScope: (accountKey) => swap('.scope-body', () => (state.scope = accountKey)),
+  showSettings: () => swap('.panel', () => (state.view = 'settings')),
+  showAccounts: () => swap('.panel', () => (state.view = 'accounts')),
   toggle: (key, open) => state.opened.set(key, open),
   // Orca opens it in the system browser, asking the person first for a site this plugin has not opened before.
   openCredit: orca.shell ? () => void orca.shell?.openExternal(AUTHOR_URL) : null,

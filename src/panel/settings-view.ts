@@ -14,7 +14,8 @@ import {
 import type { AccountReport, UsageReport } from '../core/report'
 import type { Preferences } from '../preferences'
 import { RULE_KIND_LABEL, RULE_LEVEL_LABEL } from '../tones'
-import { el, iconButton } from './dom'
+import { avatar } from './avatar'
+import { el, hinted, iconButton } from './dom'
 
 const HOUR = 60 * 60 * 1000
 const DAY = 24 * HOUR
@@ -23,7 +24,7 @@ const LEVELS = Object.keys(RULE_LEVEL_LABEL) as RuleLevel[]
 /** What each kind of rule offers and says. A reset lasts a month, a plan window a week or so. */
 const KINDS: Record<RuleKind, { hint: string; within: number[]; left: number[]; added: AlertRule }> = {
   plan: {
-    hint: 'Warn me when a plan reset is close and a lot is still unused. Each rule is a mark on the bar.',
+    hint: 'Warn me when a weekly reset is close and a lot is still unused. Each rule is a mark on the bar.',
     within: [6, 10, 12, 24, 48, 72, 120, 168].map((hours) => hours * HOUR),
     left: [10, 20, 30, 40, 50, 60, 70, 80, 90],
     added: { withinMs: DAY, minLeftPercent: 50, level: 'warning' },
@@ -128,7 +129,7 @@ function ruleGroup(
   const save = (list: AlertRule[] | null) => onSave(withRuleList(rules, scope, kind, list))
   const general = rules.general[kind]
   const own = scope === null ? general : rules.accounts[scope]?.[kind]
-  const title = el('h3', 'group-title', RULE_KIND_LABEL[kind])
+  const title = hinted('div', el('h3', 'group-title', RULE_KIND_LABEL[kind]), KINDS[kind].hint)
   if (own === undefined) {
     return el(
       'section',
@@ -147,7 +148,6 @@ function ruleGroup(
       title,
       iconButton('Add rule', 'plus', `${kind}-add`, () => save([...own, KINDS[kind].added])),
     ),
-    el('p', 'section-hint', KINDS[kind].hint),
     own.length === 0
       ? el('p', 'section-hint faint', 'No rules: nothing turns yellow or red.')
       : el('div', 'rules', ...own.map((rule, index) => ruleRow(kind, own, rule, index, save))),
@@ -157,7 +157,7 @@ function ruleGroup(
   )
 }
 
-/** A provider's name, with the login when the person has more than one account there. */
+/** By account key: a provider's name, with the login when the person has more than one account there. */
 function scopeLabels(accounts: AccountReport[]): Map<string, string> {
   const perProvider = new Map<string, number>()
   for (const account of accounts) perProvider.set(account.provider, (perProvider.get(account.provider) ?? 0) + 1)
@@ -175,8 +175,8 @@ function alertsSection(
   scope: string | null,
   actions: SettingsActions,
 ): HTMLElement {
-  const tab = (label: string, key: string | null) => {
-    const button = el('button', 'scope', label)
+  const tab = (label: string, key: string | null, face: HTMLElement | string = '') => {
+    const button = el('button', 'scope', face, el('span', '', label))
     button.type = 'button'
     button.setAttribute('role', 'tab')
     button.setAttribute('aria-selected', String(key === scope))
@@ -186,25 +186,28 @@ function alertsSection(
   }
   const tabs = el('div', 'scopes', tab('General', null))
   tabs.setAttribute('role', 'tablist')
-  for (const [key, label] of scopeLabels(accounts)) tabs.append(tab(label, key))
+  const labels = scopeLabels(accounts)
+  for (const account of accounts) {
+    tabs.append(tab(labels.get(account.key) ?? account.provider, account.key, avatar(account.provider, 'small')))
+  }
   return el(
     'section',
     'settings-section',
     el('h2', 'section-label', 'Alerts'),
     tabs,
-    ...RULE_KINDS.map((kind) => ruleGroup(kind, rules, scope, actions.saveRules)),
+    // Its own element, so changing tabs swaps only this.
+    el('div', 'scope-body', ...RULE_KINDS.map((kind) => ruleGroup(kind, rules, scope, actions.saveRules))),
   )
 }
 
-function statusBarSection(preferences: Preferences, onSave: (preferences: Preferences) => void): HTMLElement {
+function generalSection(preferences: Preferences, onSave: (preferences: Preferences) => void): HTMLElement {
   const row = el(
     'button',
     'setting',
-    el(
+    hinted(
       'span',
-      'setting-text',
       el('span', 'setting-title', 'Show in the status bar'),
-      el('span', 'setting-hint', "The most pressing account, next to Orca's usage."),
+      "The most pressing account, next to Orca's usage.",
     ),
     el('i', 'switch'),
   )
@@ -213,7 +216,7 @@ function statusBarSection(preferences: Preferences, onSave: (preferences: Prefer
   row.setAttribute('aria-checked', String(preferences.showStatusBar))
   row.dataset.focus = 'show-status-bar'
   row.addEventListener('click', () => onSave({ ...preferences, showStatusBar: !preferences.showStatusBar }))
-  return el('section', 'settings-section', el('h2', 'section-label', 'Status bar'), row)
+  return el('section', 'settings-section', el('h2', 'section-label', 'General'), row)
 }
 
 /** `preferences` is null until the worker has answered them; their section waits for it. */
@@ -236,7 +239,8 @@ export function settingsView(
       el('h1', 'settings-title', 'Settings'),
       el('span', 'toolbar-error', error ?? ''),
     ),
+    // First, because it never changes: the alerts under it grow and shrink with the tab.
+    preferences ? generalSection(preferences, actions.savePreferences) : '',
     alertsSection(report.rules, report.accounts, shown, actions),
-    preferences ? statusBarSection(preferences, actions.savePreferences) : '',
   )
 }

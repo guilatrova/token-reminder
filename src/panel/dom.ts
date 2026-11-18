@@ -18,6 +18,17 @@ export function icon(name: IconName): HTMLElement {
   return node
 }
 
+/**
+ * A label whose explanation shows on demand: an info mark after it, and a tooltip when either is pointed at.
+ * `tag` is `span` where only phrasing content is allowed, such as inside a button.
+ */
+export function hinted(tag: 'div' | 'span', label: HTMLElement, hint: string): HTMLElement {
+  const tip = el('span', 'tip hint-tip', hint)
+  tip.setAttribute('role', 'tooltip')
+  label.setAttribute('aria-description', hint)
+  return el(tag, 'hinted', label, icon('info'), tip)
+}
+
 /** `focusKey` lets the panel put focus back on the same control after it redraws. */
 export function iconButton(label: string, name: IconName, focusKey: string, onClick: () => void): HTMLButtonElement {
   const button = el('button', 'icon-btn', icon(name))

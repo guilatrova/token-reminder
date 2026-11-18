@@ -14,4 +14,4 @@ export const WINDOW_LABEL: Record<WindowKind, string> = { session: 'Session', we
 /** How a rule's level is named where rules are edited and where they are drawn. */
 export const RULE_LEVEL_LABEL: Record<RuleLevel, string> = { mark: 'No colour', warning: 'Yellow', urgent: 'Red' }
 
-export const RULE_KIND_LABEL: Record<RuleKind, string> = { plan: 'Plan reset', reset: 'Rate limit reset' }
+export const RULE_KIND_LABEL: Record<RuleKind, string> = { plan: 'Weekly reset', reset: 'Rate limit reset' }

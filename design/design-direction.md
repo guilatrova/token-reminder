@@ -137,27 +137,36 @@ in the system browser. It is left out where Orca cannot open links.
 
 ## Settings
 
-The gear swaps the list for the settings. Its first line takes the toolbar's place: a back icon button and the title
-"Settings" (`14px/600`); a failed save shows its error on the right of that line and the previous values stay.
-Sections are spaced apart, each under an `11px/600` uppercase label in faint text. One surface: no cards, no borders,
-no dividers. Every change is saved at once.
+The gear swaps the list for the settings; the two hand over with a short fade (`90ms` out, `160ms` in with a `4px`
+rise), not a cut. Its first line takes the toolbar's place and is the same `26px` high: a back icon button and the
+title "Settings" (`14px/600`); a failed save shows its error on the right of that line and the previous values stay.
+The first section starts where the account list does. Sections are spaced apart, each under an `11px/600` uppercase
+label in faint text. One surface: no cards, no borders, no dividers. Every change is saved at once.
 
-**Alerts.** Under the label, a row of tabs says whose rules are on screen: "General", then one per account (the
-provider's name, with the login when a provider has more than one). Tabs are `12px/600` in secondary text; the
-selected one takes the hover fill.
+Explanations are tooltips, not text on the page: a label that has one is followed by an `11px` info mark in faint
+text, and pointing at either opens the explanation under the label (popover colours, hairline border, `11px`, up to
+`250px` wide).
 
-Each tab shows two groups, each under a `13px/600` title with an add icon button (plus) on its right and one
-sentence in `12px` secondary text:
+**General.** First, because it never changes. One line that is the switch itself (`<button role="switch">`): "Show in
+the status bar" in `600`, with the tooltip "The most pressing account, next to Orca's usage.", and a `28 x 16px`
+switch on the right, `ok` green when on. The line takes the hover fill. On by default. When off, the item leaves
+Orca's status bar and the worker stops its 10-minute reads; the panel still reads when it opens.
 
-- **Plan reset**: "Warn me when a plan reset is close and a lot is still unused. Each rule is a mark on the bar."
+**Alerts.** Under the label, a row of tabs says whose rules are on screen: "General", then one per account with the
+provider's mark at `14px` before its name (and the login when a provider has more than one). Tabs are `12px/600` in
+secondary text; the selected one takes the hover fill. Changing tabs fades only the rules under them.
+
+Each tab shows two groups, each under a `13px/600` title with its tooltip and an add icon button (plus) on the right:
+
+- **Weekly reset**: "Warn me when a weekly reset is close and a lot is still unused. Each rule is a mark on the bar."
   Times from 6h to 7d, shares from 10% to 90%.
 - **Rate limit reset**: "Warn me when a rate limit reset is about to expire unused." Times from 1d to 30d, shares
   from 0% to 90%. Built in: yellow at ≤ 10d and red at ≤ 5d, with any share left.
 
 An account's group replaces the general one for that account. Until it has one it reads "Follows the general rules."
 with a "Customize" link that copies the general rules in; once it has one, a "Use the general rules" link removes it.
-The general groups end in "Restore defaults" instead. These links are tiny, in faint text (`11px`), and turn the text
-colour on hover.
+The general groups end in "Restore defaults" instead. These links are tiny, in faint text (`11px`), sit on the right
+under the group, and turn the text colour on hover.
 
 One row per rule, read as a sentence:
 
@@ -170,8 +179,3 @@ One row per rule, read as a sentence:
 - The row takes the hover fill (`8px` radius, bleeding `8px` into the padding) when pointed at or focused within; only
   then the remove button (trash) shows, over the row's right end.
 - With no rule: "No rules: nothing turns yellow or red." in faint text.
-
-**Status bar.** One line that is the switch itself (`<button role="switch">`): "Show in the status bar" in `600`,
-under it "The most pressing account, next to Orca's usage." in `12px` secondary text, and a `28 x 16px` switch on the
-right, `ok` green when on. The line takes the hover fill. On by default. When off, the item leaves Orca's status bar
-and the worker stops its 10-minute reads; the panel still reads when it opens.
