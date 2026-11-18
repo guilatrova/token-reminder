@@ -1,0 +1,965 @@
+:root {
+  --ok: #34d399;
+  --warning: #fbbf24;
+  --urgent: #f87171;
+  --critical-amber: #ffbd61;
+  --faint: color-mix(in srgb, var(--orca-muted-foreground) 70%, transparent);
+  --track: color-mix(in srgb, var(--orca-foreground) 12%, transparent);
+}
+:root.light {
+  --ok: #059669;
+  --warning: #d97706;
+  --urgent: #dc2626;
+  --critical-amber: #a85a08;
+}
+.lvl-ok {
+  --c: var(--ok);
+}
+.lvl-warning {
+  --c: var(--warning);
+}
+.lvl-urgent {
+  --c: var(--urgent);
+}
+:where(.lvl-critical) {
+  --c: var(--urgent);
+}
+@property --flow {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 20%;
+}
+.lvl-critical {
+  --surface:
+    radial-gradient(ellipse at 35% 12%, var(--critical-amber) 4%, transparent 44%),
+    radial-gradient(ellipse at 74% 85%, var(--critical-amber), transparent 42%),
+    linear-gradient(115deg, var(--urgent) 12%, var(--critical-amber) 48%, var(--urgent) 78%);
+}
+@keyframes amber-flow {
+  to {
+    --flow: 82%;
+  }
+}
+.tank.lvl-critical,
+.line.lvl-critical > i,
+.acct.lvl-critical .pct,
+.rule-mark.lvl-critical::before {
+  background-image: var(--surface);
+  background-size: 155% 170%;
+  background-position: var(--flow) center;
+}
+.acct.lvl-critical .pct {
+  background-clip: text;
+  color: transparent;
+}
+.rule.lvl-critical .chip.level {
+  color: var(--critical-amber);
+}
+.rule-mark.lvl-critical::before {
+  border: 0;
+  width: 2px;
+  mask-image: repeating-linear-gradient(to bottom, black 0 4px, transparent 4px 6px);
+}
+@keyframes critical-text {
+  to {
+    color: var(--urgent);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .rule.lvl-critical .chip.level {
+    animation: critical-text 3.8s ease-in-out infinite alternate;
+  }
+  .tank.lvl-critical,
+  .line.lvl-critical > i,
+  .acct.lvl-critical .pct,
+  .rule-mark.lvl-critical::before {
+    animation: amber-flow 3.8s ease-in-out infinite alternate;
+  }
+}
+/* A rule that only marks the bar. */
+.lvl-mark {
+  --c: var(--orca-muted-foreground);
+}
+
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font:
+    13px/1.4 system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: var(--orca-foreground);
+  background: var(--orca-background);
+  overflow-x: hidden;
+}
+button,
+select {
+  font: inherit;
+  color: inherit;
+}
+:focus-visible {
+  outline: 2px solid var(--orca-ring);
+  outline-offset: 1px;
+}
+.icon {
+  display: inline-grid;
+}
+.icon svg {
+  width: 100%;
+  height: 100%;
+}
+.muted {
+  color: var(--orca-muted-foreground);
+}
+.error {
+  color: var(--urgent);
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
+}
+
+.panel {
+  padding: 6px 16px 16px;
+  margin: 0;
+}
+
+/* One grid for the whole list, so every row's columns line up and the bars are the same length. */
+.accounts {
+  display: grid;
+  grid-template-columns: 22px auto minmax(48px, 1fr) auto 60px 50px 12px;
+  column-gap: 8px;
+}
+.acct {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+}
+.acct > .detail,
+.acct > .reason {
+  grid-column: 1 / -1;
+}
+
+/* The account row: avatar | name and plan | bar | tanks | % left | time | chevron */
+.row {
+  all: unset;
+  box-sizing: border-box;
+  /* Bleeds 8px into the panel's padding, so the hover fill has room around the content. */
+  width: calc(100% + 16px);
+  margin: 0 -8px;
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.row:focus-visible {
+  outline: 2px solid var(--orca-ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.row:hover {
+  background: var(--orca-accent);
+}
+.row.static {
+  grid-template-columns: 22px 1fr auto;
+  cursor: default;
+}
+.row.static:hover {
+  background: none;
+}
+.avatar {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  background: var(--orca-muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+/* A provider's own mark stands alone: no box around it. */
+.avatar.mark {
+  background: none;
+}
+.avatar.mark svg,
+.avatar.mark img {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+.avatar.small {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  font-size: 8px;
+}
+.avatar.small.mark svg,
+.avatar.small.mark img {
+  width: 14px;
+  height: 14px;
+}
+/* A bitmap mark is black on white: blended so only the glyph shows, in the text colour of either theme. */
+.avatar.mark img {
+  mix-blend-mode: multiply;
+}
+.dark .avatar.mark img {
+  filter: invert(1);
+  mix-blend-mode: screen;
+}
+.who {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.name {
+  font-size: 14px;
+  font-weight: 600;
+}
+.plan {
+  color: var(--orca-muted-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pct {
+  text-align: right;
+  font-weight: 650;
+  color: var(--c);
+}
+
+.pct small {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--orca-muted-foreground);
+}
+.row .pct.none {
+  color: var(--orca-muted-foreground);
+  font-weight: 400;
+}
+.time {
+  text-align: right;
+  font-size: 12px;
+  color: var(--orca-muted-foreground);
+  white-space: nowrap;
+}
+.chev {
+  display: grid;
+  width: 12px;
+  height: 12px;
+  color: var(--faint);
+  transition: transform 0.2s;
+}
+.open .chev {
+  transform: rotate(90deg);
+}
+.unavailable {
+  color: var(--warning);
+  font-weight: 600;
+}
+.tanks {
+  display: flex;
+  gap: 3px;
+}
+.tank {
+  width: 9px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--c);
+}
+.tank.lvl-ok {
+  background: var(--orca-muted-foreground);
+}
+
+/* The pace bar */
+.pace {
+  position: relative;
+  /* As tall as the bar gets on hover, so thickening never moves anything around it. */
+  height: 14px;
+}
+.track {
+  position: absolute;
+  inset: 50% 0 auto;
+  height: 4px;
+  transform: translateY(-50%);
+  border-radius: 99px;
+  background: var(--track);
+  overflow: hidden;
+  transition: height 0.15s ease;
+}
+.open .row .pace {
+  visibility: hidden;
+}
+.fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 99px;
+  background: var(--c);
+}
+.hatch {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    color-mix(in srgb, var(--c) 60%, transparent) 0 3px,
+    transparent 3px 6px
+  );
+}
+.tick {
+  position: absolute;
+  top: 50%;
+  height: 10px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--orca-foreground);
+  transform: translate(1px, -50%);
+  box-shadow: 0 0 0 2px var(--orca-background);
+  transition: height 0.15s ease;
+}
+/* A plan rule on the bar: a dashed line where the fill must be for the rule to stay quiet. */
+.rule-mark {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  /* Wider than the line, so its title can be pointed at. */
+  width: 7px;
+  transform: translateX(-50%);
+}
+.rule-mark::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 50%;
+  border-left: 2px dashed var(--c);
+  transform: translateX(-50%);
+  transition: border-left-width 0.15s ease;
+}
+.rule-mark:hover::before {
+  border-left-width: 4px;
+}
+.rule-mark:hover + .mark-tip {
+  opacity: 1;
+}
+/* Two lines: how far the usage is from the mark, then the rule it stands for. */
+.mark-tip {
+  display: grid;
+  justify-items: start;
+}
+.mark-tip b {
+  font-weight: 600;
+}
+.mark-tip span {
+  font-weight: 400;
+  color: var(--orca-muted-foreground);
+}
+.tip {
+  position: absolute;
+  bottom: calc(100% + 5px);
+  transform: translateX(-50%);
+  padding: 2px 7px;
+  border: 1px solid var(--orca-border);
+  border-radius: 6px;
+  background: var(--orca-popover);
+  color: var(--orca-popover-foreground);
+  box-shadow: 0 2px 8px color-mix(in srgb, black 30%, transparent);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 1;
+}
+/* In the detail the tooltip opens downwards: above the bar it would be cut by the collapsing area. */
+.pace.big .tip {
+  bottom: auto;
+  top: calc(100% + 5px);
+}
+.pace:hover .track,
+.row:focus-visible .track {
+  height: 14px;
+}
+.pace:hover .tick,
+.row:focus-visible .tick {
+  height: 18px;
+}
+.pace:hover .used-tip,
+.row:focus-visible .used-tip {
+  opacity: 1;
+}
+/* One tooltip at a time: a mark that is pointed at speaks instead of the bar. */
+.pace:has(.rule-mark:hover) .used-tip {
+  opacity: 0;
+}
+.pace.grow .fill {
+  width: 0;
+  transition: width 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.pace.grow .hatch {
+  opacity: 0;
+  transition: opacity 0.5s 0.5s;
+}
+.pace.grow.go .hatch {
+  opacity: 1;
+}
+
+/* The detail under a row */
+.detail {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease;
+}
+.open .detail {
+  grid-template-rows: 1fr;
+}
+.clip {
+  overflow: hidden;
+  padding-left: 30px;
+}
+.inner,
+.reason {
+  display: grid;
+  gap: 9px;
+}
+.inner {
+  padding: 2px 0 14px;
+}
+.who-email {
+  color: var(--faint);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.note {
+  font-size: 12px;
+  color: var(--orca-muted-foreground);
+}
+.note.hot {
+  color: var(--c);
+  font-weight: 600;
+}
+.lines {
+  display: grid;
+  gap: 5px;
+}
+.line {
+  display: grid;
+  grid-template-columns: 6px 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+.line i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--c);
+}
+.line.lvl-ok i {
+  background: var(--faint);
+}
+.line .date {
+  color: var(--orca-muted-foreground);
+}
+.line b {
+  min-width: 48px;
+  text-align: right;
+  font-weight: 600;
+}
+.line.lvl-ok b {
+  color: inherit;
+}
+.line:not(.lvl-ok) b {
+  color: var(--c);
+}
+.advice {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: var(--orca-muted);
+  font-size: 12px;
+}
+.advice .icon {
+  flex: none;
+  width: 13px;
+  height: 13px;
+  margin-top: 2px;
+  color: var(--orca-muted-foreground);
+}
+/* The way out to the provider's own usage page. */
+.page-link {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  margin-left: -8px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--orca-muted-foreground);
+  cursor: pointer;
+}
+.page-link .icon {
+  width: 11px;
+  height: 11px;
+}
+.page-link:hover {
+  background: var(--orca-accent);
+  color: var(--orca-foreground);
+}
+.page-link:focus-visible {
+  outline: 2px solid var(--orca-ring);
+  outline-offset: 1px;
+}
+.reason {
+  padding: 0 0 12px 30px;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--orca-muted-foreground);
+  overflow-wrap: anywhere;
+}
+
+/* States */
+.empty {
+  padding: 24px 0;
+  text-align: center;
+}
+.empty p {
+  margin: 0;
+}
+.empty-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 2px;
+  font-size: 11px;
+}
+.toolbar-error {
+  color: var(--urgent);
+  overflow-wrap: anywhere;
+}
+.tools {
+  display: flex;
+  gap: 2px;
+  flex: none;
+}
+.icon-btn {
+  all: unset;
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  cursor: pointer;
+  color: var(--orca-muted-foreground);
+}
+.icon-btn .icon {
+  width: 13px;
+  height: 13px;
+}
+.icon-btn:hover:not(:disabled) {
+  background: var(--orca-accent);
+  color: var(--orca-foreground);
+}
+.icon-btn:focus-visible {
+  outline: 2px solid var(--orca-ring);
+  outline-offset: 1px;
+}
+.icon-btn:disabled {
+  cursor: default;
+}
+.spinning .icon {
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.credit {
+  all: unset;
+  display: block;
+  width: fit-content;
+  margin: 14px auto 0;
+  font-size: 10px;
+  color: var(--faint);
+  cursor: pointer;
+}
+.credit:hover {
+  color: var(--orca-foreground);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.credit:focus-visible {
+  outline: 2px solid var(--orca-ring);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* Settings */
+.settings-head {
+  justify-content: flex-start;
+  gap: 4px;
+  margin-left: -6px;
+}
+.settings-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.settings-head .toolbar-error {
+  margin-left: auto;
+  text-align: right;
+}
+.settings-section {
+  padding-top: 18px;
+}
+/* The first one starts where the account list does, so the bar above reads the same on both screens. */
+.settings-head + .settings-section {
+  padding-top: 8px;
+}
+
+/* A label with its explanation on demand. */
+.hinted {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.hinted > .icon {
+  width: 11px;
+  height: 11px;
+  color: var(--faint);
+}
+.hint-tip {
+  top: calc(100% + 5px);
+  bottom: auto;
+  left: 0;
+  transform: none;
+  width: max-content;
+  max-width: min(250px, 75vw);
+  font-weight: 400;
+  white-space: normal;
+  text-align: left;
+  z-index: 2;
+}
+.hinted:hover .hint-tip,
+.setting:focus-visible .hint-tip {
+  opacity: 1;
+}
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 24px;
+}
+.section-label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.section-hint {
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: var(--orca-muted-foreground);
+}
+.section-hint.faint {
+  color: var(--faint);
+}
+
+/* Whose rules are on screen: general, or one account. */
+.scopes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin: 6px -8px 0;
+}
+.scope {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 3px 8px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--orca-muted-foreground);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.scope > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.scope .avatar {
+  flex: none;
+}
+.scope:hover {
+  color: var(--orca-foreground);
+}
+.scope[aria-selected='true'] {
+  background: var(--orca-accent);
+  color: var(--orca-accent-foreground);
+}
+.scope:focus-visible {
+  outline: 2px solid var(--orca-ring);
+  outline-offset: 1px;
+}
+.rule-group {
+  padding-top: 10px;
+}
+.group-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* What a group holds sits a step in from its title. */
+.rule-group > .rules,
+.rule-group > .section-hint {
+  margin-left: 10px;
+}
+.rule-group > .section-hint {
+  padding-left: 6px;
+}
+/* One alert rule, read as a sentence: colour, "≤ 2d to reset", "≥ 50% left". One grid, so the words line up. */
+.rules {
+  display: grid;
+  /* colour | time | share | remove, then the rest of the row stays empty */
+  grid-template-columns: auto auto auto auto 1fr;
+  column-gap: 6px;
+}
+.rule {
+  position: relative;
+  width: calc(100% + 16px);
+  margin: 0 -8px;
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+.rule:hover,
+.rule:focus-within {
+  background: var(--orca-accent);
+}
+.cond {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--orca-muted-foreground);
+  white-space: nowrap;
+}
+.chip {
+  appearance: none;
+  field-sizing: content;
+  padding: 2px 16px 2px 6px;
+  border: 0;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--orca-foreground);
+  background-color: transparent;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--faint) 50%),
+    linear-gradient(135deg, var(--faint) 50%, transparent 50%);
+  background-position:
+    calc(100% - 8px) 55%,
+    calc(100% - 5px) 55%;
+  background-size: 3px 3px;
+  background-repeat: no-repeat;
+  justify-self: start;
+  cursor: pointer;
+}
+.chip:hover {
+  background-color: var(--track);
+}
+.chip.level {
+  color: var(--c);
+}
+/* Right after the sentence it removes, not at the far edge of the panel. */
+.rule .icon-btn {
+  width: 20px;
+  height: 20px;
+  opacity: 0;
+}
+.rule:hover .icon-btn,
+.rule:focus-within .icon-btn {
+  opacity: 1;
+}
+.rule .icon-btn:hover {
+  color: var(--urgent);
+}
+/* What can be done to a group, under its rules and in line with them: add first, the rare ones after. */
+.group-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 14px;
+  margin: 4px 0 0 16px;
+}
+.text-link {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--faint);
+  cursor: pointer;
+}
+.text-link.primary {
+  font-weight: 600;
+  color: var(--orca-muted-foreground);
+}
+.text-link .icon {
+  width: 10px;
+  height: 10px;
+}
+.text-link:hover {
+  color: var(--orca-foreground);
+}
+.text-link:focus-visible {
+  outline: 2px solid var(--orca-ring);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* A preference: the whole line is the switch. */
+.setting {
+  all: unset;
+  box-sizing: border-box;
+  width: calc(100% + 16px);
+  margin: 4px -8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.setting:hover {
+  background: var(--orca-accent);
+}
+.setting:focus-visible {
+  outline: 2px solid var(--orca-ring);
+  outline-offset: 2px;
+}
+.setting-title {
+  font-weight: 600;
+}
+.switch {
+  flex: none;
+  position: relative;
+  width: 28px;
+  height: 16px;
+  border-radius: 99px;
+  background: var(--track);
+  transition: background 0.15s ease;
+}
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--orca-background);
+  box-shadow: 0 0 0 1px var(--track);
+  transition: transform 0.15s ease;
+}
+[aria-checked='true'] .switch {
+  background: var(--ok);
+}
+[aria-checked='true'] .switch::after {
+  transform: translateX(12px);
+  box-shadow: none;
+}
+
+.btn {
+  all: unset;
+  padding: 6px 12px;
+  border: 1px solid var(--orca-border);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn:hover {
+  background: var(--orca-accent);
+}
+.btn:focus-visible {
+  outline: 2px solid var(--orca-ring);
+  outline-offset: 1px;
+}
+
+/* Loading: rows in the shape of the list, with a slow sweep of light */
+.row.skeleton {
+  grid-template-columns: 22px auto minmax(48px, 1fr) 60px 50px;
+  cursor: default;
+}
+.bone {
+  display: block;
+  height: 10px;
+  border-radius: 99px;
+  background: linear-gradient(
+    90deg,
+    var(--track) 25%,
+    color-mix(in srgb, var(--orca-foreground) 22%, transparent) 50%,
+    var(--track) 75%
+  );
+  background-size: 300% 100%;
+  animation: sweep 1.6s ease-in-out infinite;
+}
+.avatar-bone {
+  height: 22px;
+  border-radius: 7px;
+}
+.bar-bone {
+  height: 6px;
+}
+@keyframes sweep {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "manifestVersion": 2,
+  "id": "token-reminder",
+  "name": "Token Reminder",
+  "version": "0.1.0",
+  "description": "Shows how much of each AI plan is still unused and warns before a reset throws it away.",
+  "engines": {
+    "orca": ">=1.4.248"
+  },
+  "execution": "trusted-worker",
+  "pluginApi": 1,
+  "main": "src/worker.ts",
+  "contributes": {
+    "panels": [
+      {
+        "id": "usage",
+        "title": "Token Reminder",
+        "icon": "gauge",
+        "entry": "src/panel/index.html"
+      }
+    ],
+    "commands": [
+      {
+        "id": "token-reminder.toggle-sidebar",
+        "title": "Token Reminder: Toggle the right sidebar",
+        "action": "sidebar.right.toggle"
+      }
+    ],
+    "statusBarItems": [
+      {
+        "id": "unused-plan",
+        "icon": "gauge",
+        "text": "Reading usage",
+        "tooltip": "Token Reminder",
+        "command": "token-reminder.toggle-sidebar"
+      }
+    ]
+  },
+  "capabilities": [
+    {
+      "kind": "storage:own"
+    }
+  ]
+}

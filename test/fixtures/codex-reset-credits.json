@@ -1,0 +1,8 @@
+{
+  "credits": [
+    { "status": "available", "expires_at": "2027-02-01T00:00:00Z" },
+    { "status": "available", "expires_at": "2027-01-20T00:00:00Z" },
+    { "status": "redeemed", "expires_at": "2027-01-01T00:00:00Z" }
+  ],
+  "available_count": 2
+}
