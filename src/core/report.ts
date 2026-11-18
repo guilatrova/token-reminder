@@ -68,6 +68,7 @@ export type OkAccountReport = Pick<OkUsage, 'provider' | 'account' | 'status' | 
 export type AccountReport = OkAccountReport | (UnavailableUsage & { key: string })
 
 export type UsageReport = {
+  tiboReset?: boolean
   accounts: AccountReport[]
   rules: AlertRules
   /** Epoch ms when this report was worked out. Every time left counts from here. */
@@ -147,9 +148,21 @@ function sortRank(account: AccountReport): number {
   return account.status === 'ok' ? ORDER[account.level] : ORDER.ok + 1
 }
 
-export function buildReport(accounts: AccountUsage[], rules: AlertRules, now: number): UsageReport {
-  const reported = accounts.map((usage) => reportAccount(usage, rules, now))
-  return { accounts: reported.sort((a, b) => sortRank(a) - sortRank(b)), rules, readAt: now }
+const TIBO_RULES: AlertRules = {
+  general: { plan: [{ withinMs: 7 * DAY, minLeftPercent: 0, level: 'critical' }], reset: [] },
+  accounts: {},
+}
+
+export function buildReport(accounts: AccountUsage[], rules: AlertRules, now: number, tiboReset = false): UsageReport {
+  const reported = accounts.map((usage) =>
+    reportAccount(usage, tiboReset && usage.provider === 'Codex' ? TIBO_RULES : rules, now),
+  )
+  return {
+    ...(tiboReset && { tiboReset }),
+    accounts: reported.sort((a, b) => sortRank(a) - sortRank(b)),
+    rules,
+    readAt: now,
+  }
 }
 
 /** One account that needs spending now: what is about to be lost, and by when. */
@@ -183,6 +196,7 @@ function spendCall(account: AccountReport): SpendCall | null {
 /** Every account that needs spending, most pressing first: worst level, then the soonest deadline. */
 export function spendCalls(report: UsageReport): SpendCall[] {
   return report.accounts
+    .filter((account) => !report.tiboReset || account.provider === 'Codex')
     .flatMap((account) => spendCall(account) ?? [])
     .sort((a, b) => ORDER[a.level] - ORDER[b.level] || a.by - b.by)
 }

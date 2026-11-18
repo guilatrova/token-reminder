@@ -11,6 +11,7 @@ declare module 'orca' {
      */
     'usage.latest': { output: UsageReport }
     /** Reads every provider now and answers the fresh report. */
+    'tibo.set': { input: { active: boolean }; output: UsageReport }
     'usage.read': { output: UsageReport }
     /** Replaces the alert rules and answers the last read judged by them. It does not read the providers. */
     'rules.save': { input: { rules: AlertRules }; output: UsageReport }

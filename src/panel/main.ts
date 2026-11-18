@@ -68,6 +68,7 @@ const keepReport = (report: UsageReport) => void (state.report = report)
 const keepPreferences = (preferences: Preferences) => void (state.preferences = preferences)
 
 const actions: Actions = {
+  setTibo: (active) => run(() => orca.plugin.request('tibo.set', { active }), keepReport),
   refresh: () => run(() => orca.plugin.request('usage.read'), keepReport),
   saveRules: (rules: AlertRules) => run(() => orca.plugin.request('rules.save', { rules }), keepReport),
   savePreferences: (preferences: Preferences) =>

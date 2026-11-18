@@ -963,3 +963,28 @@ select {
     transition: none !important;
   }
 }
+
+.tibo-menu {
+  position: fixed;
+  inset: 3rem 1rem auto auto;
+  margin: 0;
+  width: min(18rem, 80vw);
+  padding: 1rem;
+  color: var(--orca-foreground);
+  background: var(--orca-background);
+  border: 1px solid var(--track);
+  border-radius: 8px;
+}
+.tibo-menu details {
+  margin-top: 0.75rem;
+}
+.tibo-progress {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1rem;
+}
+.tibo-progress progress {
+  width: 100%;
+  height: 1.5rem;
+  accent-color: var(--critical-amber);
+}

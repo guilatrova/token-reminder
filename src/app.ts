@@ -28,6 +28,7 @@ export async function start(
   let reading: Promise<UsageReport> | null = null
   let timer: ReturnType<typeof setInterval> | null = null
 
+  let tiboReset = (await orca.storage.get('tiboReset')) === true
   const stored = await orca.storage.get(PREFERENCES_KEY)
   const parsed = stored === null || stored === undefined ? DEFAULT_PREFERENCES : parsePreferences(stored)
   if (!parsed) throw new Error('The saved preferences are not valid.')
@@ -44,7 +45,7 @@ export async function start(
 
   /** The last read as it stands right now: today's rules, and every time left counted from this moment. */
   async function judged(accounts: AccountUsage[]): Promise<UsageReport> {
-    return buildReport(accounts, await storedRules(), now())
+    return buildReport(accounts, await storedRules(), now(), tiboReset)
   }
 
   async function publish(report: UsageReport): Promise<UsageReport> {
@@ -90,6 +91,13 @@ export async function start(
     if (!rules) throw new Error('Those alert rules are not valid.')
     await orca.storage.set(RULES_KEY, rules)
     // A read that is already running answers with the new rules or is followed by this one; either way no new read.
+    await reading?.catch(() => undefined)
+    return lastRead ? publish(await judged(lastRead.accounts)) : read()
+  })
+  orca.panels.handle('tibo.set', async ({ active }) => {
+    if (typeof active !== 'boolean') throw new Error('Invalid Tibo Reset mode.')
+    await orca.storage.set('tiboReset', active)
+    tiboReset = active
     await reading?.catch(() => undefined)
     return lastRead ? publish(await judged(lastRead.accounts)) : read()
   })

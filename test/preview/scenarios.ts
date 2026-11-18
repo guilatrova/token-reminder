@@ -107,10 +107,12 @@ export function fakeWorker(name: string): (request: string, input?: unknown) => 
   const scenario = SCENARIOS[name]
   if (scenario === undefined) throw new Error(`Unknown scenario "${name}". Known: ${scenarioNames.join(', ')}`)
   let rules = RULES[name] ?? DEFAULT_ALERT_RULES
+  let tiboReset = false
   let preferences = DEFAULT_PREFERENCES
   return async (request, input) => {
     if (scenario === 'loading') return new Promise(() => {})
     if (scenario === 'error') throw new Error('The worker could not be reached.')
+    if (request === 'tibo.set') tiboReset = (input as { active: boolean }).active
     if (request === 'preferences.read') return preferences
     if (request === 'preferences.save') {
       const parsed = parsePreferences(input)
@@ -122,6 +124,6 @@ export function fakeWorker(name: string): (request: string, input?: unknown) => 
       if (!parsed) throw new Error('Those alert rules are not valid.')
       rules = parsed
     }
-    return buildReport(scenario, rules, Date.now())
+    return buildReport(scenario, rules, Date.now(), tiboReset)
   }
 }

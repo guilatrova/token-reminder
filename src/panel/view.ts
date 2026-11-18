@@ -22,6 +22,7 @@ export type PanelState = {
 }
 
 export type Actions = SettingsActions & {
+  setTibo: (active: boolean) => void
   refresh: () => void
   showSettings: () => void
   /** Opens a page in the browser; null where Orca cannot open links (browser clients). */
@@ -31,6 +32,26 @@ export type Actions = SettingsActions & {
 
 /** The first line: settings and refresh on the right, and why the last read failed, if it did, on the left. */
 function toolbar(state: PanelState, actions: Actions): HTMLElement {
+  const active = !!state.report?.tiboReset
+  const trigger = el('button', 'btn', active ? 'Leave Tibo Reset mode' : 'Tibo Reset')
+  trigger.dataset.focus = 'tibo'
+  const popover = el('div', 'tibo-menu')
+  popover.popover = 'auto'
+  const start = el('button', 'btn', 'Start')
+  start.onclick = () => actions.setTibo(true)
+  const help = el(
+    'details',
+    '',
+    el('summary', '', "What's a Tibo Reset Mode?"),
+    el(
+      'p',
+      '',
+      'When OpenAI announces an early reset, unused weekly Codex quota may expire at any moment. This mode shows your Codex accounts together and temporarily applies one Critical rule: at least 0% left within 7 days. Leave to restore your usual view and rules.',
+    ),
+  )
+  popover.append(start, help)
+  if (active) trigger.onclick = () => actions.setTibo(false)
+  else trigger.popoverTargetElement = popover
   const refresh = iconButton('Refresh', 'refresh', 'refresh', actions.refresh)
   refresh.disabled = state.loading
   refresh.classList.toggle('spinning', state.loading)
@@ -38,7 +59,7 @@ function toolbar(state: PanelState, actions: Actions): HTMLElement {
     'div',
     'toolbar',
     el('span', 'toolbar-error', state.error ?? ''),
-    el('span', 'tools', iconButton('Settings', 'gear', 'gear', actions.showSettings), refresh),
+    el('span', 'tools', trigger, popover, iconButton('Settings', 'gear', 'gear', actions.showSettings), refresh),
   )
 }
 
@@ -63,16 +84,34 @@ function accountsView(state: PanelState, report: UsageReport, actions: Actions, 
     onToggle: actions.toggle,
     openExternal: actions.openExternal,
   }
+  const accounts = report.tiboReset
+    ? report.accounts.filter((account) => account.provider === 'Codex')
+    : report.accounts
+  const banner = el('div', 'tibo-progress')
+  if (report.tiboReset) {
+    const weekly = accounts.flatMap((account) =>
+      account.status === 'ok' ? account.windows.filter((w) => w.kind === 'weekly').slice(0, 1) : [],
+    )
+    const progress = el('progress', '')
+    progress.max = 100
+    progress.setAttribute('aria-label', 'Average weekly Codex usage')
+    if (weekly.length) {
+      progress.value = weekly.reduce((sum, w) => sum + w.usedPercent, 0) / weekly.length
+      banner.append(el('strong', '', Math.round(progress.value) + '% of weekly Codex quota used'), progress)
+    } else banner.append('Weekly Codex usage unavailable')
+    if (weekly.length < accounts.length)
+      banner.append(el('small', '', `Usage available for ${weekly.length} of ${accounts.length} accounts`))
+  }
   const list =
-    report.accounts.length === 0
+    accounts.length === 0
       ? el(
           'div',
           'empty',
-          el('p', 'empty-title', 'No accounts yet'),
+          el('p', 'empty-title', report.tiboReset ? 'No Codex accounts yet' : 'No accounts yet'),
           el('p', 'muted', 'Add an account in Orca and it shows up here.'),
         )
-      : el('div', 'accounts', ...report.accounts.map((account) => accountRow(account, ctx)))
-  return el('div', 'panel', toolbar(state, actions), list, credit(actions))
+      : el('div', 'accounts', ...accounts.map((account) => accountRow(account, ctx)))
+  return el('div', 'panel', toolbar(state, actions), report.tiboReset ? banner : '', list, credit(actions))
 }
 
 /** Placeholder rows in the shape of the account list, so the panel does not jump when the report arrives. */
