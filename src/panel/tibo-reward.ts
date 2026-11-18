@@ -70,9 +70,7 @@ function showResetTicket(elapsed: number, stats: TiboMission['stats'], openExter
     ? `${stats.accounts} Codex account${stats.accounts === 1 ? '' : 's'}`
     : 'Codex accounts unavailable'
   const tokenLabel =
-    stats?.localTokens != null
-      ? `${stats.localTokens.toLocaleString('en-US')} local tokens`
-      : 'Local tokens unavailable'
+    stats?.localTokens != null ? `${stats.localTokens.toLocaleString('en-US')} tokens` : 'Tokens unavailable'
   ctx.fillText('MISSION ACCOMPLISHED', 64, 570)
   ctx.textAlign = 'right'
   ctx.fillText('100% USED', 1016, 570)
@@ -84,7 +82,8 @@ function showResetTicket(elapsed: number, stats: TiboMission['stats'], openExter
   ctx.fillText(tokenLabel, 1016, 618, 490)
 
   const image = el('img', 'mission-ticket')
-  image.alt = `Tibo, I burned all my tokens in under ${bound} and now you owe me a reset. ${accountLabel} · ${tokenLabel}.`
+  const tweet = `Tibo, I burned all my tokens in under ${bound} and now you owe me a reset.`
+  image.alt = `${tweet} ${accountLabel} · ${tokenLabel}.`
   image.src = canvas.toDataURL('image/png')
   const save = el('a', 'btn', 'Save PNG')
   save.href = image.src
@@ -93,7 +92,7 @@ function showResetTicket(elapsed: number, stats: TiboMission['stats'], openExter
   const hint = el('p', 'mission-share-hint')
   hint.setAttribute('role', 'status')
   const draft = new URL('https://twitter.com/intent/tweet')
-  draft.searchParams.set('text', image.alt)
+  draft.searchParams.set('text', stats ? `${tweet} ${accountLabel}.` : tweet)
   const share = el('a', 'btn', 'Share on X')
   share.href = draft.href
   share.target = '_blank'
