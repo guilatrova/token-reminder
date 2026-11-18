@@ -74,7 +74,7 @@ export type UsageReport = {
   readAt: number
 }
 
-const ORDER: Record<AlertLevel, number> = { urgent: 0, warning: 1, ok: 2 }
+const ORDER: Record<AlertLevel, number> = { critical: -1, urgent: 0, warning: 1, ok: 2 }
 
 function reportWindow(window: UsageWindow, rules: RuleSet, now: number): WindowReport {
   const timeLeftPercent =

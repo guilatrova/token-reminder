@@ -83,11 +83,11 @@ test('a reset is judged by the reset rules, colours the account and is what it c
   assert.equal(Math.round(account.windows[0]?.atRiskPercent ?? -1), 2)
   assert.deepEqual(
     account.resets.map((reset) => reset.alert?.level),
-    ['urgent', 'warning', undefined],
+    ['critical', 'warning', undefined],
   )
-  assert.equal(account.level, 'urgent')
+  assert.equal(account.level, 'critical')
   assert.deepEqual(spendCalls(report), [
-    { provider: 'Alpha', level: 'urgent', deadline: 'reset', leftPercent: 60, by: NOW + 30 * HOUR },
+    { provider: 'Alpha', level: 'critical', deadline: 'reset', leftPercent: 60, by: NOW + 30 * HOUR },
   ])
   assert.deepEqual(
     account.advice && [account.advice.leftPercent, Math.round(account.advice.perDayPercent ?? -1)],

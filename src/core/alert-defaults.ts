@@ -12,7 +12,7 @@ export const DEFAULT_ALERT_RULES: AlertRules = {
     // A reset is worth a whole plan window, so it is worth spending however much of the plan is left.
     reset: [
       { withinMs: 15 * DAY, minLeftPercent: 0, level: 'warning' },
-      { withinMs: 7 * DAY, minLeftPercent: 0, level: 'urgent' },
+      { withinMs: 7 * DAY, minLeftPercent: 0, level: 'critical' },
     ],
   },
   accounts: {},

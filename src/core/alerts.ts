@@ -4,7 +4,7 @@ import { leftPercent, type UsageWindow, type WindowKind } from './usage'
 import { DEFAULT_ALERT_RULES } from './alert-defaults'
 export { DEFAULT_ALERT_RULES } from './alert-defaults'
 
-export type AlertLevel = 'ok' | 'warning' | 'urgent'
+export type AlertLevel = 'ok' | 'warning' | 'urgent' | 'critical'
 
 /** `mark` only draws the rule on the bar, as a spend to aim for; it never alerts. */
 export type RuleLevel = 'mark' | Exclude<AlertLevel, 'ok'>
@@ -37,7 +37,7 @@ function isAlertRule(value: unknown): value is AlertRule {
   const { withinMs, minLeftPercent, level } = value
   const within = typeof withinMs === 'number' && Number.isFinite(withinMs) && withinMs > 0
   const left = typeof minLeftPercent === 'number' && minLeftPercent >= 0 && minLeftPercent <= 100
-  return within && left && (level === 'mark' || level === 'warning' || level === 'urgent')
+  return within && left && (level === 'mark' || level === 'warning' || level === 'urgent' || level === 'critical')
 }
 
 function isRuleList(value: unknown): value is AlertRule[] {
@@ -111,7 +111,7 @@ export const WINDOW_RULE_KIND: Partial<Record<WindowKind, RuleKind>> = { weekly:
 /** Which rules judge a rate limit reset by its expiry. */
 export const RESET_RULE_KIND: RuleKind = 'reset'
 
-const SEVERITY: Record<AlertLevel | RuleLevel, number> = { ok: 0, mark: 0, warning: 1, urgent: 2 }
+const SEVERITY: Record<AlertLevel | RuleLevel, number> = { ok: 0, mark: 0, warning: 1, urgent: 2, critical: 3 }
 
 export type Alert = { level: AlertLevel; rule: AlertRule | null }
 

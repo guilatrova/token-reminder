@@ -2,6 +2,7 @@
   --ok: #34d399;
   --warning: #fbbf24;
   --urgent: #f87171;
+  --critical-orange: #fb923c;
   --faint: color-mix(in srgb, var(--orca-muted-foreground) 70%, transparent);
   --track: color-mix(in srgb, var(--orca-foreground) 12%, transparent);
 }
@@ -9,6 +10,7 @@
   --ok: #059669;
   --warning: #d97706;
   --urgent: #dc2626;
+  --critical-orange: #b45309;
 }
 .lvl-ok {
   --c: var(--ok);
@@ -18,6 +20,32 @@
 }
 .lvl-urgent {
   --c: var(--urgent);
+}
+:where(.lvl-critical) {
+  --c: var(--urgent);
+}
+@property --critical-ink {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: transparent;
+}
+@keyframes critical-pulse {
+  from {
+    --critical-ink: var(--urgent);
+  }
+  to {
+    --critical-ink: var(--critical-orange);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .rule.lvl-critical .level,
+  .tank.lvl-critical,
+  .line.lvl-critical > i,
+  .acct.lvl-critical .pct,
+  .rule-mark.lvl-critical::before {
+    --c: var(--critical-ink);
+    animation: critical-pulse 2s ease-in-out infinite alternate;
+  }
 }
 /* A rule that only marks the bar. */
 .lvl-mark {

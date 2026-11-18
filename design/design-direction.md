@@ -44,6 +44,8 @@ Orca has no status colours, so the panel defines three, once, keyed on the `dark
 | `warning` | Spend soon | `#fbbf24` | `#d97706` |
 | `urgent`  | Spend now  | `#f87171` | `#dc2626` |
 
+Critical indicators slowly alternate between red and orange. Reduced motion keeps them red.
+
 A level class (`lvl-ok`, `lvl-warning`, `lvl-urgent`) sets one `--c` custom property; everything coloured by state
 reads `--c`.
 
@@ -183,7 +185,7 @@ One row per rule, read as a sentence:
 - The rows sit `10px` in from the group's title and share one grid, so the words line up from rule to rule. They
   are compact: `2px` of padding above and below.
 - The three values are native selects drawn as words: no box, `12px/600` (the words between them `11px`), a tiny caret, and the bar-track colour as
-  the fill when pointed at. The colour select offers "No colour", "Yellow" and "Red"; it takes the rule's colour,
+  the fill when pointed at. The colour select offers "No colour", "Yellow", "Red" and "Critical"; it takes the rule's colour,
   which is the only colour on the row. A rule with no colour never alerts: it only marks the bar, as a spend to aim for.
 - The row takes the hover fill (`8px` radius, bleeding `8px` into the padding) when pointed at or focused within; only
   then the remove button (trash) shows, in a column of its own right after "left".
