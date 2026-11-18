@@ -1,4 +1,5 @@
-import type { weeklyUsage } from '../core/report'
+import { missionClock, rewardButton } from './tibo-reward'
+import type { weeklyUsage, TiboMission } from '../core/report'
 import { el, icon } from './dom'
 
 function portrait() {
@@ -49,10 +50,10 @@ const quips = [
   'Damn. You made it in time. Now I owe you a reset.',
 ]
 
-export function tiboPost(weekly: ReturnType<typeof weeklyUsage>, total: number) {
+export function tiboPost(weekly: ReturnType<typeof weeklyUsage>, total: number, mission: TiboMission) {
   const { percent, count } = weekly
-  const complete = percent === 100 && count === total
-  const milestone = percent === null ? null : Math.min(complete ? 4 : 3, Math.floor(percent / 25))
+  const complete = mission.finishedAt !== null
+  const milestone = complete ? 4 : percent === null ? null : Math.min(3, Math.floor(percent / 25))
   const name = el('div', 'tibo-byline', el('strong', '', 'Tibo'), icon('verified'))
   const author = el(
     'header',
@@ -68,16 +69,9 @@ export function tiboPost(weekly: ReturnType<typeof weeklyUsage>, total: number) 
   if (percent !== null) meter.value = percent
   meter.setAttribute('aria-label', 'Average weekly Codex quota used')
   const number = percent === null ? '—' : Math.floor(percent) + '%'
-  post.append(
-    el(
-      'div',
-      'tibo-stats',
-      el('span', '', complete ? 'Mission accomplished' : 'Weekly quota used'),
-      el('strong', '', number),
-    ),
-    meter,
-  )
+  post.append(el('div', 'tibo-stats', missionClock(mission), el('strong', '', number)), meter)
   if (count < total) post.append(el('small', 'tibo-coverage', `Usage available for ${count} of ${total} accounts`))
+  if (mission.finishedAt !== null) post.append(rewardButton(mission.finishedAt - mission.startedAt))
   return post
 }
 

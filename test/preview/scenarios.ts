@@ -1,7 +1,13 @@
 // The states the panel has to draw, as a stand-in for the worker. `npm run preview` serves them
 // outside Orca, because Orca's own scenario tooling only covers components panels.
 import { DEFAULT_ALERT_RULES, parseAlertRules, type AlertRules } from '../../src/core/alerts'
-import { buildReport, type UsageReport } from '../../src/core/report'
+import {
+  buildReport,
+  recordCompletion,
+  restoreMission,
+  type TiboMission,
+  type UsageReport,
+} from '../../src/core/report'
 import { accountKey, type AccountUsage, type UsageWindow } from '../../src/core/usage'
 import { DEFAULT_PREFERENCES, parsePreferences, type Preferences } from '../../src/preferences'
 
@@ -111,12 +117,16 @@ export function fakeWorker(
   const scenario = SCENARIOS[name]
   if (scenario === undefined) throw new Error(`Unknown scenario "${name}". Known: ${scenarioNames.join(', ')}`)
   let rules = RULES[name] ?? DEFAULT_ALERT_RULES
-  let tiboReset = !!simulatedUsage
+  const saved = simulatedUsage ? localStorage.getItem('tibo-preview-mission') : null
+  let mission: TiboMission | null = simulatedUsage
+    ? restoreMission(saved === null ? true : JSON.parse(saved), Date.now())
+    : null
   let preferences = DEFAULT_PREFERENCES
   return async (request, input) => {
     if (scenario === 'loading') return new Promise(() => {})
     if (scenario === 'error') throw new Error('The worker could not be reached.')
-    if (request === 'tibo.set') tiboReset = (input as { active: boolean }).active
+    if (request === 'tibo.set')
+      mission = (input as { active: boolean }).active ? (mission ?? { startedAt: Date.now(), finishedAt: null }) : null
     if (request === 'preferences.read') return preferences
     if (request === 'preferences.save') {
       const parsed = parsePreferences(input)
@@ -129,6 +139,12 @@ export function fakeWorker(
       rules = parsed
     }
     const accounts = simulatedUsage ? [account('Codex', 'pro', [weekly(100 - simulatedUsage(), 3 * DAY)])] : scenario
-    return buildReport(accounts, rules, Date.now(), tiboReset)
+    if (simulatedUsage && simulatedUsage() < 100 && mission?.finishedAt != null)
+      mission = { startedAt: Date.now(), finishedAt: null }
+    const report = buildReport(accounts, rules, Date.now(), mission)
+    recordCompletion(report)
+    mission = report.tiboReset ?? null
+    if (simulatedUsage) localStorage.setItem('tibo-preview-mission', JSON.stringify(mission))
+    return report
   }
 }

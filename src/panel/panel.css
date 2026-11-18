@@ -1139,11 +1139,6 @@ select {
   justify-content: space-between;
   gap: 8px;
 }
-.tibo-stats span {
-  color: var(--sub);
-  font-size: 11px;
-  font-weight: 600;
-}
 .tibo-stats strong {
   color: var(--end);
   font-size: 23px;
@@ -1184,4 +1179,43 @@ select {
   border-radius: 1px;
   pointer-events: none;
   opacity: 0;
+}
+
+.mission-claim {
+  margin-top: 12px;
+  cursor: pointer;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-weight: 650;
+  color: #173d34;
+  background: linear-gradient(110deg, #abebcc, #f4e29a);
+}
+.mission-claim:hover {
+  filter: brightness(1.07);
+}
+.mission-dialog {
+  width: min(540px, 94vw);
+  padding: 10px;
+  border: 1px solid var(--track);
+  border-radius: 14px;
+  color: var(--orca-foreground);
+  background: var(--orca-background);
+}
+.mission-dialog::backdrop {
+  background: #101318ad;
+}
+.mission-ticket {
+  display: block;
+  width: 100%;
+  border-radius: 7px;
+}
+.mission-dialog > div {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+.mission-dialog a {
+  text-decoration: none;
 }

@@ -1,5 +1,6 @@
 // Wires the panel to Orca: asks the worker for the report, keeps the state, and redraws on every change.
 import '../protocol'
+import { updateMissionClock } from './tibo-reward'
 import { animateMission } from './tibo-view'
 import type { AlertRules } from '../core/alerts'
 import type { Preferences } from '../preferences'
@@ -23,11 +24,18 @@ const state: PanelState = {
 let missionVisible = false
 let missionComplete = false
 let motionFrame = 0
+let clockInterval: number | undefined
 
 function render() {
   const active = document.activeElement
   const focusKey = active instanceof HTMLElement ? active.dataset.focus : undefined
   root?.replaceChildren(panelView(state, actions, orca.locale))
+  window.clearInterval(clockInterval)
+  const mission = state.report?.tiboReset
+  const clock = root?.querySelector<HTMLElement>('.mission-clock')
+  if (clock && mission && mission.finishedAt === null) {
+    clockInterval = window.setInterval(() => updateMissionClock(clock, mission), 1000)
+  }
   cancelAnimationFrame(motionFrame)
   motionFrame = requestAnimationFrame(() => {
     const post = root?.querySelector<HTMLElement>('.tibo-post')

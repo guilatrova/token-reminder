@@ -6,17 +6,20 @@ const params = new URLSearchParams(location.search)
 document.documentElement.className = params.get('theme') ?? 'dark'
 const nothing = () => ({ dispose() {} })
 const controls = document.querySelector('#milestones')
-let percent = 75
+const milestones = [0, 25, 50, 75, 100]
+const storedPercent = controls ? localStorage.getItem('tibo-preview-percent') : null
+let percent = storedPercent !== null && milestones.includes(Number(storedPercent)) ? Number(storedPercent) : 75
 const request = fakeWorker(params.get('scenario') ?? 'today', controls ? () => percent : undefined)
 const events = new EventTarget()
 if (controls) {
-  for (const milestone of [0, 25, 50, 75, 100]) {
+  for (const milestone of milestones) {
     const button = document.createElement('button')
     button.className = 'btn'
     button.textContent = milestone + '%'
     button.setAttribute('aria-pressed', String(milestone === percent))
     button.onclick = async () => {
       percent = milestone
+      localStorage.setItem('tibo-preview-percent', String(percent))
       controls
         .querySelectorAll('button')
         .forEach((other) => other.setAttribute('aria-pressed', String(other === button)))

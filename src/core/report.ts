@@ -67,8 +67,20 @@ export type OkAccountReport = Pick<OkUsage, 'provider' | 'account' | 'status' | 
 
 export type AccountReport = OkAccountReport | (UnavailableUsage & { key: string })
 
+export type TiboMission = { startedAt: number; finishedAt: number | null }
+
+export function restoreMission(value: unknown, now: number): TiboMission | null {
+  if (value === true) return { startedAt: now, finishedAt: null }
+  if (!value || typeof value !== 'object' || !('startedAt' in value) || !('finishedAt' in value)) return null
+  const { startedAt, finishedAt } = value
+  if (typeof startedAt !== 'number' || !Number.isFinite(startedAt)) return null
+  if (finishedAt !== null && (typeof finishedAt !== 'number' || !Number.isFinite(finishedAt) || finishedAt < startedAt))
+    return null
+  return { startedAt, finishedAt }
+}
+
 export type UsageReport = {
-  tiboReset?: boolean
+  tiboReset?: TiboMission
   accounts: AccountReport[]
   rules: AlertRules
   /** Epoch ms when this report was worked out. Every time left counts from here. */
@@ -162,6 +174,8 @@ export function weeklyUsage(accounts: AccountReport[]) {
     return weekly ? [weekly.usedPercent] : []
   })
   return {
+    complete:
+      accounts.length > 0 && readings.length === accounts.length && readings.every((percent) => percent === 100),
     count: readings.length,
     percent: readings.length ? readings.reduce((sum, used) => sum + used, 0) / readings.length : null,
   }
@@ -172,13 +186,27 @@ const TIBO_RULES: AlertRules = {
   accounts: {},
 }
 
-export function buildReport(accounts: AccountUsage[], rules: AlertRules, now: number, tiboReset = false): UsageReport {
+export function buildReport(
+  accounts: AccountUsage[],
+  rules: AlertRules,
+  now: number,
+  tiboReset: TiboMission | null = null,
+): UsageReport {
   const reported = accounts.map((usage) => reportAccount(usage, tiboReset && isCodex(usage) ? TIBO_RULES : rules, now))
-  return {
+  const report: UsageReport = {
     ...(tiboReset && { tiboReset }),
     accounts: reported.sort((a, b) => sortRank(a) - sortRank(b)),
     rules,
     readAt: now,
+  }
+  return report
+}
+
+/** Only a fresh read from the current mission can earn a reset ticket. */
+export function recordCompletion(report: UsageReport) {
+  const mission = report.tiboReset
+  if (mission && mission.finishedAt === null && weeklyUsage(visibleAccounts(report)).complete) {
+    report.tiboReset = { ...mission, finishedAt: Math.max(report.readAt, mission.startedAt) }
   }
 }
 

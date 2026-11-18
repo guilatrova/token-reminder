@@ -2,7 +2,7 @@
 // re-read on a timer and show the status bar item while something needs spending. It never names a provider.
 import type { OrcaWorkerApi } from 'orca/worker'
 import { DEFAULT_ALERT_RULES, parseAlertRules, type AlertRules } from './core/alerts'
-import { buildReport, type UsageReport } from './core/report'
+import { buildReport, recordCompletion, type TiboMission, restoreMission, type UsageReport } from './core/report'
 import { readAllUsage, type AccountUsage, type UsageSource } from './core/usage'
 import { DEFAULT_PREFERENCES, parsePreferences, type Preferences } from './preferences'
 import { statusBarView } from './status-bar'
@@ -28,7 +28,20 @@ export async function start(
   let reading: Promise<UsageReport> | null = null
   let timer: ReturnType<typeof setInterval> | null = null
 
-  let tiboReset = (await orca.storage.get('tiboReset')) === true
+  const savedMission = await orca.storage.get('tiboReset')
+  let mission = restoreMission(savedMission, now())
+  if (savedMission === true && mission) await orca.storage.set('tiboReset', mission)
+
+  // Mode changes and completed reads share a single ordered storage record.
+  let missionWrite = Promise.resolve()
+  function withMission<T>(action: () => Promise<T>): Promise<T> {
+    const result = missionWrite.then(action)
+    missionWrite = result.then(
+      () => {},
+      () => {},
+    )
+    return result
+  }
   const stored = await orca.storage.get(PREFERENCES_KEY)
   const parsed = stored === null || stored === undefined ? DEFAULT_PREFERENCES : parsePreferences(stored)
   if (!parsed) throw new Error('The saved preferences are not valid.')
@@ -44,8 +57,18 @@ export async function start(
   }
 
   /** The last read as it stands right now: today's rules, and every time left counted from this moment. */
-  async function judged(accounts: AccountUsage[]): Promise<UsageReport> {
-    return buildReport(accounts, await storedRules(), now(), tiboReset)
+  async function judged(accounts: AccountUsage[], observedMission?: TiboMission | null): Promise<UsageReport> {
+    const rules = await storedRules()
+    return withMission(async () => {
+      const report = buildReport(accounts, rules, now(), mission)
+      if (mission && observedMission === mission) recordCompletion(report)
+      if (report.tiboReset && report.tiboReset !== mission) {
+        await orca.storage.set('tiboReset', report.tiboReset)
+        mission = report.tiboReset
+        applyStatusBarPreference()
+      }
+      return report
+    })
   }
 
   async function publish(report: UsageReport): Promise<UsageReport> {
@@ -61,8 +84,9 @@ export async function start(
   function read(): Promise<UsageReport> {
     reading ??= (async () => {
       try {
+        const observedMission = mission
         lastRead = { accounts: await readAllUsage(sources), at: now() }
-        return await publish(await judged(lastRead.accounts))
+        return await publish(await judged(lastRead.accounts, observedMission))
       } finally {
         reading = null
       }
@@ -73,11 +97,12 @@ export async function start(
     read().catch((error: unknown) => orca.log(`Usage refresh failed: ${String(error)}`))
   }
 
-  /** The timer only serves the status bar item; without it the panel reads when it opens. */
+  /** Poll during a mission even when the status bar is hidden, so completion is recorded with the panel closed. */
   function applyStatusBarPreference(): void {
     if (timer) clearInterval(timer)
     // Unreferenced: the timer alone must not keep a process alive (a test that fails before stopping it).
-    timer = preferences.showStatusBar ? setInterval(readInBackground, POLL_MS).unref() : null
+    timer =
+      preferences.showStatusBar || mission?.finishedAt === null ? setInterval(readInBackground, POLL_MS).unref() : null
   }
 
   orca.panels.handle('usage.read', read)
@@ -96,10 +121,16 @@ export async function start(
   })
   orca.panels.handle('tibo.set', async ({ active }) => {
     if (typeof active !== 'boolean') throw new Error('Invalid Tibo Reset mode.')
-    await orca.storage.set('tiboReset', active)
-    tiboReset = active
+    const started = await withMission(async () => {
+      if (active === !!mission) return false
+      const next = active ? { startedAt: now(), finishedAt: null } : null
+      await orca.storage.set('tiboReset', next ?? false)
+      mission = next
+      applyStatusBarPreference()
+      return active
+    })
     await reading?.catch(() => undefined)
-    return lastRead ? publish(await judged(lastRead.accounts)) : read()
+    return started || !lastRead ? read() : publish(await judged(lastRead.accounts))
   })
   orca.panels.handle('preferences.read', async () => preferences)
   orca.panels.handle('preferences.save', async (input) => {
@@ -119,7 +150,7 @@ export async function start(
 
   applyStatusBarPreference()
   // The item does not stay hidden across an Orca restart by itself.
-  if (preferences.showStatusBar) readInBackground()
+  if (preferences.showStatusBar || mission?.finishedAt === null) readInBackground()
   else await orca.host.call('statusBar.update', { id: STATUS_BAR_ITEM, visible: false })
   return () => {
     if (timer) clearInterval(timer)
