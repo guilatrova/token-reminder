@@ -34,10 +34,11 @@ let pending = 0
 async function run<T>(request: () => Promise<T>, keep: (answer: T) => void) {
   pending++
   state.loading = true
+  // Cleared when a request starts, not when one succeeds: another request's failure must stay on screen.
+  state.error = null
   render()
   try {
     keep(await request())
-    state.error = null
   } catch (error) {
     state.error = error instanceof Error ? error.message : String(error)
   }
